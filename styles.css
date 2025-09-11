@@ -1,0 +1,222 @@
+:root {
+  --blue: #0b61ff;
+  --yellow: #ffd400;
+  --muted: #6b7280;
+  --bg: #f7fbff;
+  --card: #ffffff;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial;
+  margin: 0;
+  background: var(--bg);
+  color: #0f172a;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, var(--blue), #2a8bf7);
+  color: #fff;
+}
+.topbar .brand {
+  font-weight: 700;
+  font-size: 20px;
+}
+.topbar nav a {
+  color: #fff;
+  margin-left: 12px;
+  text-decoration: none;
+}
+.admin-link {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+main {
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+.panel {
+  display: none;
+  padding: 18px;
+}
+.panel.active {
+  display: block;
+}
+
+/* show panels when fragment/hash targets them (no-JS navigation) */
+.panel:target {
+  display: block;
+}
+.lead {
+  color: var(--muted);
+  font-size: 18px;
+}
+.cta-row {
+  margin-top: 18px;
+}
+.btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #eee;
+  color: #111;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn.primary {
+  background: var(--blue);
+  color: #fff;
+}
+.btn.secondary {
+  background: var(--yellow);
+  color: #08306b;
+}
+.card {
+  background: var(--card);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(12, 20, 40, 0.04);
+  margin-top: 12px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+input,
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e6eef8;
+}
+input[type="file"] {
+  padding: 6px;
+}
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.item {
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fff, #f7fbff);
+}
+.item img {
+  width: 100%;
+  height: auto; /* show full image height */
+  max-height: 260px; /* prevent extremely tall images from breaking layout */
+  object-fit: contain; /* preserve aspect ratio, don't crop */
+  border-radius: 6px;
+  background: #fff; /* helps white images blend with cards */
+}
+.item .meta {
+  margin-top: 8px;
+}
+.hidden {
+  display: none;
+}
+footer {
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+}
+@media (max-width: 700px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .topbar nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .topbar nav a {
+    margin-left: 0;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+  }
+  .video-wrap {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    background: transparent;
+  }
+  .scan-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .scan-controls {
+    width: 100%;
+  }
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  main {
+    margin: 18px auto;
+    padding: 0 12px;
+  }
+}
+.video-wrap {
+  width: 360px;
+  height: 270px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.scan-wrap {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.scan-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qr-output {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.badge {
+  display: inline-block;
+  padding: 6px 8px;
+  background: var(--yellow);
+  border-radius: 999px;
+  font-weight: 600;
+}
+.status-pending {
+  background: rgba(255, 193, 7, 0.12);
+  color: #7a4a00;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.status-claimed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  padding: 6px 8px;
+  border-radius: 6px;
+}

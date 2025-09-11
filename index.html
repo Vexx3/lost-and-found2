@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ifound — Lost & Found</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">ifound</div>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#scan">Scan QR</a>
+        <a href="#register">Register</a>
+        <a href="#myitems">My Registered Items</a>
+        <a href="#lost">Lost Items</a>
+        <a href="#faq">FAQ</a>
+        <a href="admin.html" class="admin-link">Admin</a>
+      </nav>
+    </header>
+
+    <main id="app">
+      <section id="home" class="panel active">
+        <h1>Find & Recover with Ease</h1>
+        <p class="lead">
+          Experience our dedicated lost and found system at
+          <strong>STI College Muñoz-EDSA</strong>.
+        </p>
+        <p>
+          A Lost and Found System is designed to efficiently track, store, and
+          return lost items to their rightful owners. By implementing a
+          structured process, organizations can ensure that misplaced belongings
+          are handled with care, reducing inconvenience and increasing the
+          chances of successful recovery within STI College Muñoz-EDSA.
+        </p>
+        <div class="cta-row">
+          <a href="#register" class="btn primary">Register</a>
+          <a href="#scan" class="btn secondary">Scan QR</a>
+        </div>
+      </section>
+
+      <section id="scan" class="panel">
+        <h2>Scan QR</h2>
+        <p>
+          Scan the QR tag on the item. You can use your camera (mobile
+          recommended) or upload a photo of the QR code.
+        </p>
+
+        <div class="scan-wrap">
+          <div class="video-wrap"></div>
+          <div class="scan-controls">
+            <button id="start-camera" class="btn primary">Use Camera</button>
+            <input
+              id="img-file"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+            <div id="scan-result" class="card">
+              <div>
+                <strong>Found item:</strong>
+                <div>Wallet</div>
+                <div>Owner: Juan Dela Cruz (0917-xxx-xxxx)</div>
+                <div style="margin-top: 8px">
+                  <em>Example showing the scan result UI.</em>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="found-form" class="card">
+          <h3>Report Found Item</h3>
+          <form id="foundForm">
+            <input
+              type="text"
+              id="finderName"
+              placeholder="Your name (finder)"
+              required
+            />
+            <input
+              type="text"
+              id="foundLocation"
+              placeholder="Location (e.g., Library)"
+              required
+            />
+            <label>Photo (optional)</label>
+            <input type="file" id="foundPhoto" accept="image/*" />
+            <button class="btn primary" type="submit">
+              Submit Found Report
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section id="register" class="panel">
+        <h2>Register Lost Item</h2>
+        <p>
+          Fill the details.
+        </p>
+        <form id="registerForm" class="card">
+          <div class="two-col">
+            <input id="fullName" placeholder="Full Name" required />
+            <input id="strand" placeholder="Strand" required />
+          </div>
+          <div class="two-col">
+            <input id="email" placeholder="Email" type="email" required />
+            <input id="contact" placeholder="Contact Number" required />
+          </div>
+          <div class="two-col">
+            <input id="studentId" placeholder="Student ID" required />
+            <input
+              id="itemName"
+              placeholder="Item Name (e.g., Wallet)"
+              required
+            />
+          </div>
+          <label>Item Picture</label>
+          <input id="itemPhoto" type="file" accept="image/*" required />
+          <div class="qr-output card" id="qrCard">
+            <h3>Your Item QR (example)</h3>
+            <div
+              id="qrcode"
+              style="
+                background: #fff;
+                padding: 10px;
+                border-radius: 8px;
+                display: inline-block;
+              "
+            >
+              <img
+                src="images/qr_example.png"
+                alt="QR example"
+                width="160"
+                height="160"
+              />
+            </div>
+            <div style="margin-top:8px">
+              <a href="images/qr_example.png" download class="btn">Download QR</a>
+            </div>
+            <p>
+              This is a QR placeholder for the registered item. Save or
+              screenshot this image and attach a label to the item.
+            </p>
+          </div>
+          <button class="btn primary" type="submit">
+            Register & Generate QR
+          </button>
+        </form>
+      </section>
+
+      <section id="myitems" class="panel">
+        <h2>My Registered Items</h2>
+        <p>Enter your Student ID to view items you registered.</p>
+        <div class="card">
+          <div style="display: flex; gap: 8px; align-items: center">
+            <input id="myStudentId" placeholder="Student ID" />
+            <button id="myItemsBtn" class="btn">Show My Items</button>
+          </div>
+          <div id="myItemsList" style="margin-top: 12px">
+            <div class="card" style="margin-bottom: 8px">
+              <strong>Wallet</strong>
+              <img
+                src="images/wallet.png"
+                style="max-width: 200px; margin-top: 8px"
+                alt="Wallet"
+              />
+            </div>
+            <div class="card" style="margin-bottom: 8px">
+              <strong>Phone</strong>
+              <img
+                src="images/phone.png"
+                style="max-width: 200px; margin-top: 8px"
+                alt="Phone"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="lost" class="panel">
+        <h2>Lost Items</h2>
+        <div class="filters">
+          <select id="categoryFilter">
+            <option value="all">All Categories</option>
+            <option>Phones</option>
+            <option>Wallets</option>
+            <option>Tumblers</option>
+          </select>
+          <input id="searchBar" placeholder="Search items or owners" />
+        </div>
+        <div id="itemsList" class="list"></div>
+        <div style="margin-top: 12px">
+          <div class="item card">
+            <img <img src="images/phone.png" alt="Phone" />
+            <div class="meta">
+              <strong>Phone</strong>
+              <div>Owner: Maria Santos</div>
+              <div style="margin-top: 6px">
+                <span class="badge">Phones</span>
+              </div>
+              <div style="margin-top: 8px">
+                <button class="btn">Claim</button>
+              </div>
+            </div>
+          </div>
+          <div class="item card">
+            <img <img src="images/wallet.png" alt="Wallet" />
+            <div class="meta">
+              <strong>Wallet</strong>
+              <div>Owner: John Reyes</div>
+              <div style="margin-top: 6px">
+                <span class="badge">Wallets</span>
+              </div>
+              <div style="margin-top: 8px">
+                <button class="btn">Claim</button>
+              </div>
+            </div>
+          </div>
+          <div class="item card">
+            <img src="images/tumbler.png" alt="Tumbler" />
+            <div class="meta">
+              <strong>Tumbler</strong>
+              <div>Owner: Alex Cruz</div>
+              <div style="margin-top: 6px">
+                <span class="badge">Tumblers</span>
+              </div>
+              <div style="margin-top: 8px">
+                <button class="btn">Claim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" class="panel">
+        <h2>FAQ & Guidelines</h2>
+        <div class="card">
+          <h3>How to report a found item</h3>
+          <ol>
+            <li>
+              Scan the QR on the item (or upload a photo of the QR) via the Scan
+              page.
+            </li>
+            <li>Fill location and attach a photo — submit to report.</li>
+            <li>
+              Staff will verify the found item and it will appear in the Lost
+              Items list.
+            </li>
+          </ol>
+          <h3>How to claim an item</h3>
+          <ol>
+            <li>Find the item on the Lost Items section and click "Claim".</li>
+            <li>
+              Provide proof (photo of ID / student ID) and submit claim form.
+            </li>
+            <li>Staff will verify and mark the item as Returned.</li>
+          </ol>
+          <h3>QR Tagging instructions</h3>
+          <p>
+            Attach the generated QR sticker to the item in a visible spot. The
+            QR contains a unique ID that links to the owner and item info.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>ifound — STI College Muñoz-EDSA</small>
+    </footer>
+  </body>
+</html>

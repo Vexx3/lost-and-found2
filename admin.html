@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ifound — Admin</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar"><div class="brand">ifound — Admin</div></header>
+    <main style="max-width: 1100px; margin: 24px auto; padding: 0 16px">
+      <div id="adminContent">
+        <section class="card">
+          <h2>Pending Found Reports</h2>
+          <div id="reports">
+            <div class="card" style="margin-bottom: 8px">
+              <strong>Wallet</strong>
+              <div>Finder: Ana Garcia</div>
+              <div>Location: Library</div>
+              <div style="margin-top: 8px">
+                <img
+                  src="/images/wallet.png"
+                  width="300"
+                  height="140"
+                  style="max-width: 200px; border-radius: 6px"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="card" style="margin-top: 12px">
+          <h2>Claims</h2>
+          <div id="claims">
+            <div class="card" style="margin-bottom: 8px">
+              <strong>Claim: Wallet</strong>
+              <div>Claimant: Juan Dela Cruz</div>
+              <div>Status: Claimed</div>
+            </div>
+          </div>
+        </section>
+        <section class="card" style="margin-top: 12px">
+          <h2>Analytics</h2>
+          <div id="analytics">
+            <div>Total items: 12</div>
+            <div>Claimed: 4</div>
+            <div>Pending: 3</div>
+            <div>Recovery rate: 33%</div>
+          </div>
+        </section>
+        <section class="card" style="margin-top: 12px">
+          <h2>Data Controls</h2>
+          <button id="exportData" class="btn">Export JSON</button>
+          <input type="file" id="importFile" accept="application/json" />
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
