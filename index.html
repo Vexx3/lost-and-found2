@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>ifound — Lost & Found</title>
     <link rel="stylesheet" href="styles.css" />
+  <script defer src="public/localdb.js?v=20251103"></script>
+  <script defer src="public/app.js?v=20251103"></script>
   </head>
   <body>
     <header class="topbar">
@@ -58,16 +60,7 @@
               accept="image/*"
               capture="environment"
             />
-            <div id="scan-result" class="card">
-              <div>
-                <strong>Found item:</strong>
-                <div>Wallet</div>
-                <div>Owner: Juan Dela Cruz (0917-xxx-xxxx)</div>
-                <div style="margin-top: 8px">
-                  <em>Example showing the scan result UI.</em>
-                </div>
-              </div>
-            </div>
+            <div id="scan-result" class="card"></div>
           </div>
         </div>
 
@@ -118,34 +111,6 @@
           </div>
           <label>Item Picture</label>
           <input id="itemPhoto" type="file" accept="image/*" required />
-          <div class="qr-output card" id="qrCard">
-            <h3>Your Item QR (example)</h3>
-            <div
-              id="qrcode"
-              style="
-                background: #fff;
-                padding: 10px;
-                border-radius: 8px;
-                display: inline-block;
-              "
-            >
-              <img
-                src="images/qr_example.png"
-                alt="QR example"
-                width="160"
-                height="160"
-              />
-            </div>
-            <div style="margin-top: 8px">
-              <a href="images/qr_example.png" download class="btn"
-                >Download QR</a
-              >
-            </div>
-            <p>
-              This is a QR placeholder for the registered item. Save or
-              screenshot this image and attach a label to the item.
-            </p>
-          </div>
           <button class="btn primary" type="submit">
             Register & Generate QR
           </button>
@@ -161,24 +126,7 @@
             <input id="myStudentId" placeholder="Student ID" />
             <button id="myItemsBtn" class="btn">Show My Items</button>
           </div>
-          <div id="myItemsList" style="margin-top: 12px">
-            <div class="card" style="margin-bottom: 8px">
-              <strong>Wallet</strong>
-              <img
-                src="images/wallet.png"
-                style="max-width: 200px; margin-top: 8px"
-                alt="Wallet"
-              />
-            </div>
-            <div class="card" style="margin-bottom: 8px">
-              <strong>Phone</strong>
-              <img
-                src="images/phone.png"
-                style="max-width: 200px; margin-top: 8px"
-                alt="Phone"
-              />
-            </div>
-          </div>
+          <div id="myItemsList" style="margin-top: 12px"></div>
         </div>
       </section>
 
@@ -195,47 +143,6 @@
           <input id="searchBar" placeholder="Search items or owners" />
         </div>
         <div id="itemsList" class="list"></div>
-        <div style="margin-top: 12px">
-          <div class="item card">
-            <img src="images/phone.png" alt="Phone" />
-            <div class="meta">
-              <strong>Phone</strong>
-              <div>Owner: Maria Santos</div>
-              <div style="margin-top: 6px">
-                <span class="badge">Phones</span>
-              </div>
-              <div style="margin-top: 8px">
-                <button class="btn">Claim</button>
-              </div>
-            </div>
-          </div>
-          <div class="item card">
-            <img src="images/wallet.png" alt="Wallet" />
-            <div class="meta">
-              <strong>Wallet</strong>
-              <div>Owner: John Reyes</div>
-              <div style="margin-top: 6px">
-                <span class="badge">Wallets</span>
-              </div>
-              <div style="margin-top: 8px">
-                <button class="btn">Claim</button>
-              </div>
-            </div>
-          </div>
-          <div class="item card">
-            <img src="images/tumbler.png" alt="Tumbler" />
-            <div class="meta">
-              <strong>Tumbler</strong>
-              <div>Owner: Alex Cruz</div>
-              <div style="margin-top: 6px">
-                <span class="badge">Tumblers</span>
-              </div>
-              <div style="margin-top: 8px">
-                <button class="btn">Claim</button>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section id="faq" class="panel">
