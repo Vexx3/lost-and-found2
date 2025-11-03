@@ -7,6 +7,13 @@ function setActivePanel() {
   const target = document.querySelector(hash);
   if (target) target.classList.add('active');
   if (hash === '#lost') loadLostItems();
+  // Stop any cameras when navigating away from their panels
+  if (hash !== '#scan' && typeof window.stopScanCamera === 'function') {
+    try { window.stopScanCamera(); } catch {}
+  }
+  if (hash !== '#register' && typeof window.stopRegCamera === 'function') {
+    try { window.stopRegCamera(); } catch {}
+  }
 }
 window.addEventListener('hashchange', setActivePanel);
 document.addEventListener('DOMContentLoaded', async () => {
@@ -43,37 +50,171 @@ function h(tag, attrs = {}, children = []) {
 // No asset URL rewriting needed in local mode
 function assetUrl(p) { return p; }
 
+// Category helpers
+function categoryLabel(key) {
+  const map = { phones: 'Phone', wallets: 'Wallet', tumblers: 'Tumbler', other: 'Other' };
+  return map[key] || 'Other';
+}
+function inferCategoryFromName(name) {
+  if (!name) return 'other';
+  if (/phone|iphone|android|samsung|oppo|vivo/i.test(name)) return 'phones';
+  if (/wallet/i.test(name)) return 'wallets';
+  if (/tumbler|bottle|hydro/i.test(name)) return 'tumblers';
+  return 'other';
+}
+
 // Register & Generate QR
 function bindRegister() {
   const form = document.getElementById('registerForm');
   if (!form) return;
+  const fileInput = document.getElementById('itemPhoto');
+  const previewImg = document.getElementById('regPreview');
+  const openCamBtn = document.getElementById('regOpenCam');
+  const camPanel = document.getElementById('regCamPanel');
+  const stopCamBtn = document.getElementById('regStopCam');
+  const captureBtn = document.getElementById('regCapture');
+  const clearBtn = document.getElementById('regClearPhoto');
+  const videoWrap = document.getElementById('regVideoWrap');
+  const quickActions = document.getElementById('regQuickActions');
+  const catSelect = document.getElementById('itemCategory');
+
+  let regMediaStream = null;
+  let regCapturedDataUrl = null;
+
+  function showPreview(src) {
+    if (!previewImg) return;
+    if (src) {
+      previewImg.src = src;
+      previewImg.style.display = 'block';
+    } else {
+      previewImg.removeAttribute('src');
+      previewImg.style.display = 'none';
+    }
+  }
+
+  async function startRegCamera() {
+    try {
+      if (regMediaStream) return; // already started
+      const video = document.createElement('video');
+      video.setAttribute('playsinline', '');
+      video.style.width = '320px';
+      video.style.height = '240px';
+      // Mirror preview
+      video.style.transform = 'scaleX(-1)';
+      videoWrap.innerHTML = '';
+      videoWrap.appendChild(video);
+      regMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = regMediaStream;
+      await video.play();
+    } catch (e) {
+      console.error('Register camera error', e);
+      alert('Unable to access camera. Please allow permission or use file upload.');
+    }
+  }
+
+  function stopRegCamera() {
+    if (regMediaStream) {
+      regMediaStream.getTracks().forEach((t) => t.stop());
+      regMediaStream = null;
+    }
+    if (videoWrap) videoWrap.innerHTML = '';
+  }
+  // Expose globally so router can stop on navigation
+  window.stopRegCamera = stopRegCamera;
+
+  function toggleCamPanel(show) {
+    if (!camPanel) return;
+    camPanel.style.display = show ? 'block' : 'none';
+    if (quickActions) quickActions.style.display = show ? 'none' : 'flex';
+    if (show) startRegCamera();
+    else stopRegCamera();
+  }
+
+  if (fileInput) fileInput.addEventListener('change', async (e) => {
+    regCapturedDataUrl = null; // prioritize new file
+    const f = e.target.files && e.target.files[0];
+    if (!f) { showPreview(null); return; }
+    try {
+      const dataUrl = await fileToDataUrl(f, 800);
+      showPreview(dataUrl);
+    } catch (err) {
+      console.error('Preview failed', err);
+      showPreview(null);
+    }
+  });
+
+  if (openCamBtn) openCamBtn.addEventListener('click', () => {
+    toggleCamPanel(true);
+  });
+  if (stopCamBtn) stopCamBtn.addEventListener('click', () => toggleCamPanel(false));
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    if (fileInput) fileInput.value = '';
+    regCapturedDataUrl = null;
+    showPreview(null);
+  });
+  if (captureBtn) captureBtn.addEventListener('click', () => {
+    // Capture current video frame to data URL
+    try {
+      const video = videoWrap && videoWrap.querySelector('video');
+      if (!video) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      // Draw mirrored to match preview orientation
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      regCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      showPreview(regCapturedDataUrl);
+      toggleCamPanel(false);
+    } catch (e) {
+      console.error('Capture failed', e);
+      alert('Failed to capture photo.');
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fd = new FormData();
-    fd.append('fullName', document.getElementById('fullName').value.trim());
-    fd.append('strand', document.getElementById('strand').value.trim());
-    fd.append('email', document.getElementById('email').value.trim());
-    fd.append('contact', document.getElementById('contact').value.trim());
-    fd.append('studentId', document.getElementById('studentId').value.trim());
-    fd.append('itemName', document.getElementById('itemName').value.trim());
-    const photo = document.getElementById('itemPhoto').files[0];
-    if (photo) fd.append('itemPhoto', photo);
+    const fullName = document.getElementById('fullName').value.trim();
+    const strand = document.getElementById('strand').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    const studentId = document.getElementById('studentId').value.trim();
+    const itemName = document.getElementById('itemName').value.trim();
+    const category = (catSelect && catSelect.value) || '';
+    if (!category) { alert('Please select a category.'); return; }
+    const photo = fileInput && fileInput.files[0];
+    // Validate unique item name per student
+    const existing = (ifoundDB.listItemsByStudent(studentId) || []).some((x) => (x.itemName || '').trim().toLowerCase() === itemName.toLowerCase());
+    if (existing) {
+      alert('You already registered an item with this name. Please use a different name.');
+      return;
+    }
 
     try {
       // Read and downscale image to data URL for storage
       let photoDataUrl = null;
-      if (photo) {
+      if (regCapturedDataUrl) {
+        photoDataUrl = regCapturedDataUrl;
+      } else if (photo) {
         photoDataUrl = await fileToDataUrl(photo, 800);
       }
+      if (!photoDataUrl) {
+        alert('Please add a photo via upload or camera.');
+        return;
+      }
       const item = ifoundDB.addItem({
-        itemName: document.getElementById('itemName').value.trim(),
-        studentId: document.getElementById('studentId').value.trim(),
-        ownerName: document.getElementById('fullName').value.trim(),
-        strand: document.getElementById('strand').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        contact: document.getElementById('contact').value.trim(),
+        itemName,
+        studentId,
+        ownerName: fullName,
+        strand,
+        email,
+        contact,
         photoDataUrl,
+        category,
       });
       const sidInput = document.getElementById('myStudentId');
       if (sidInput) sidInput.value = item.studentId;
@@ -94,10 +235,13 @@ let mediaStream = null;
 let scanning = false;
 function bindScan() {
   const startBtn = document.getElementById('start-camera');
+  const stopBtn = document.getElementById('stop-camera');
   const videoWrap = document.querySelector('.video-wrap');
   const resultCard = document.getElementById('scan-result');
   const foundForm = document.getElementById('foundForm');
   const imgFile = document.getElementById('img-file');
+  const foundPhotoInput = document.getElementById('foundPhoto');
+  const foundPreview = document.getElementById('foundPreview');
 
   if (resultCard) resultCard.innerHTML = '<div><em>Waiting for scan...</em></div>';
 
@@ -111,6 +255,8 @@ function bindScan() {
       video.setAttribute('playsinline', '');
       video.style.width = '360px';
       video.style.height = '270px';
+      // Mirror preview so movement looks natural
+      video.style.transform = 'scaleX(-1)';
       videoWrap.innerHTML = '';
       videoWrap.appendChild(video);
 
@@ -146,7 +292,10 @@ function bindScan() {
       mediaStream.getTracks().forEach((t) => t.stop());
       mediaStream = null;
     }
+    if (videoWrap) videoWrap.innerHTML = '';
   }
+  // expose globally so router can stop when leaving panel
+  window.stopScanCamera = stopCamera;
 
   async function decodeFromImage(file) {
     if (!('BarcodeDetector' in window)) {
@@ -185,10 +334,27 @@ function bindScan() {
   }
 
   if (startBtn && videoWrap) startBtn.addEventListener('click', startCameraScan);
+  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
   if (imgFile) imgFile.addEventListener('change', (e) => {
     const f = e.target.files && e.target.files[0];
     if (f) decodeFromImage(f);
   });
+
+  if (foundPhotoInput && foundPreview) {
+    foundPhotoInput.addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) { foundPreview.style.display = 'none'; foundPreview.removeAttribute('src'); return; }
+      try {
+        const dataUrl = await fileToDataUrl(f, 800);
+        foundPreview.src = dataUrl;
+        foundPreview.style.display = 'block';
+      } catch (err) {
+        console.error('Found preview failed', err);
+        foundPreview.style.display = 'none';
+        foundPreview.removeAttribute('src');
+      }
+    });
+  }
 
   if (foundForm) {
     foundForm.addEventListener('submit', async (e) => {
@@ -207,6 +373,17 @@ function bindScan() {
         if (!r) throw new Error('Submit failed');
         alert('Report submitted. Thank you!');
         foundForm.reset();
+        // Clear found photo preview and input
+        const foundPreviewEl = document.getElementById('foundPreview');
+        const foundPhotoEl = document.getElementById('foundPhoto');
+        if (foundPreviewEl) { foundPreviewEl.style.display = 'none'; foundPreviewEl.removeAttribute('src'); }
+        if (foundPhotoEl) foundPhotoEl.value = '';
+        // Reset scan state: clear result card and image QR file input
+        const resultCard = document.getElementById('scan-result');
+        if (resultCard) resultCard.innerHTML = '<div><em>Waiting for scan...</em></div>';
+        const qrImgFile = document.getElementById('img-file');
+        if (qrImgFile) qrImgFile.value = '';
+        scannedItemId = null;
       } catch (err) {
         console.error(err);
         alert('Failed to submit report.');
@@ -226,6 +403,7 @@ async function loadScannedItem(itemId, container) {
           h('div', { html: `<strong>${it.itemName}</strong>` }),
           h('div', {}, `Owner: ${it.ownerName} (${it.contact || 'n/a'})`),
           h('div', {}, `Status: ${it.status}`),
+          it.lastClaimedAt ? h('div', { style: 'font-size:12px;color:#6b7280' }, `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`) : null,
         ]),
       ]),
     ]);
@@ -257,11 +435,11 @@ function bindMyItems() {
         list.appendChild(h('div', { class: 'card', style: 'margin-bottom:8px' }, [
           h('div', { html: `<strong>${it.itemName}</strong> <span class="status-${it.status}">${it.status}</span>` }),
           it.photoPath ? h('img', { src: assetUrl(it.photoPath), style: 'max-width:200px;margin-top:8px' }) : null,
+          h('div', { style: 'margin-top:6px;font-size:12px;color:#6b7280' }, `Category: ${categoryLabel(it.category || inferCategoryFromName(it.itemName))}`),
           h('div', { style: 'margin-top:8px;display:flex;gap:8px;align-items:center' }, [
             h('img', { src: ifoundDB.qrUrlFor(it.id), alt: 'QR', style: 'width:120px;height:120px;background:#fff;padding:6px;border-radius:8px' }),
             h('a', { href: '#', class: 'btn', onclick: (e) => { e.preventDefault(); downloadQr(it.id); } }, 'Download QR')
           ]),
-          h('div', { style: 'margin-top:8px;font-size:12px;color:#6b7280' }, `Item ID: ${it.id}`),
         ]));
       });
     } catch (err) {
@@ -283,7 +461,8 @@ async function loadLostItems() {
     items
       .filter((it) => {
         const hit = `${it.itemName} ${it.ownerName}`.toLowerCase().includes(search);
-        const inCat = cat === 'all' || (cat === 'phones' && /phone/i.test(it.itemName)) || (cat === 'wallets' && /wallet/i.test(it.itemName)) || (cat === 'tumblers' && /tumbler/i.test(it.itemName));
+        const itemCat = (it.category || inferCategoryFromName(it.itemName));
+        const inCat = cat === 'all' || itemCat === cat;
         return hit && inCat;
       })
       .forEach((it) => {
@@ -294,6 +473,8 @@ async function loadLostItems() {
           h('div', { class: 'meta' }, [
             h('strong', {}, it.itemName),
             h('div', {}, `Owner: ${it.ownerName}`),
+            h('div', { style: 'margin-top:4px;color:#6b7280;font-size:12px' }, `Category: ${categoryLabel(it.category || inferCategoryFromName(it.itemName))}`),
+            it.lastClaimedAt ? h('div', { style: 'margin-top:4px;color:#6b7280;font-size:12px' }, `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`) : null,
             secondaryPhoto ? h('div', { style: 'margin-top:8px' }, [
               h('img', { src: assetUrl(secondaryPhoto), alt: 'Owner Photo', style: 'max-width:140px;border-radius:6px;opacity:0.9' })
             ]) : null,
@@ -301,15 +482,12 @@ async function loadLostItems() {
               h('button', { class: 'btn', onclick: async () => {
                 const sid = prompt('Enter owner\'s Student ID to claim:');
                 if (!sid) return;
-                const name = prompt('Enter owner\'s Full Name to claim:');
-                if (!name) return;
                 const sameId = (sid || '').trim() === (it.studentId || '').trim();
-                const sameName = (name || '').trim().toLowerCase() === (it.ownerName || '').trim().toLowerCase();
-                if (!sameId || !sameName) {
-                  alert('Details do not match the registered owner. Cannot claim.');
+                if (!sameId) {
+                  alert('Student ID does not match the registered owner. Cannot claim.');
                   return;
                 }
-                const r = ifoundDB.addClaim({ itemId: it.id, claimantName: name });
+                const r = ifoundDB.addClaim({ itemId: it.id, claimantName: it.ownerName || 'Owner' });
                 if (r) {
                   alert('Claim submitted.');
                   loadLostItems();

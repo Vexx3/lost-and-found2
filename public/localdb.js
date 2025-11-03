@@ -36,7 +36,7 @@
     });
   }
 
-  function addItem({ itemName, studentId, ownerName, strand, email, contact, photoDataUrl }) {
+  function addItem({ itemName, studentId, ownerName, strand, email, contact, photoDataUrl, category }) {
     const db = load();
     const id = uuidv4();
     const item = {
@@ -44,6 +44,7 @@
       itemName,
       studentId,
       ownerName,
+      category: category || 'other',
       strand: strand || null,
       email: email || null,
       contact: contact || null,
@@ -119,6 +120,7 @@
     const cl = { id: db.seq.claims, itemId, claimantName, createdAt: nowIso() };
     db.claims.push(cl);
     it.status = 'claimed';
+    it.lastClaimedAt = cl.createdAt;
     save(db);
     return cl;
   }

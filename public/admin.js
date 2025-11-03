@@ -138,7 +138,6 @@ async function loadAnalytics() {
 function bindDataControls() {
   const exportBtn = document.getElementById('exportData');
   const importInput = document.getElementById('importFile');
-  const seedBtn = document.getElementById('seedDemo');
   if (exportBtn) {
     exportBtn.addEventListener('click', async () => {
       try {
@@ -172,24 +171,6 @@ function bindDataControls() {
       } catch (e) {
         alert('Invalid JSON file');
       }
-    });
-  }
-  if (seedBtn) {
-    seedBtn.addEventListener('click', () => {
-      // Create a demo item and a pending report
-      const demo = ifoundDB.addItem({
-        itemName: 'Demo Wallet',
-        studentId: 'STI-123456',
-        ownerName: 'Demo Owner',
-        strand: 'ICT',
-        email: 'demo@example.com',
-        contact: '09123456789',
-        photoDataUrl: null,
-      });
-      ifoundDB.addFoundReport({ itemId: demo.id, finderName: 'Tester', location: 'Library', photoDataUrl: null });
-      loadPending();
-      loadAnalytics();
-      alert('Demo data seeded: one item and one pending report.');
     });
   }
 }

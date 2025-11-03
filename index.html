@@ -54,6 +54,7 @@
           <div class="video-wrap"></div>
           <div class="scan-controls">
             <button id="start-camera" class="btn primary">Use Camera</button>
+            <button id="stop-camera" class="btn secondary">Stop Camera</button>
             <input
               id="img-file"
               type="file"
@@ -81,6 +82,7 @@
             />
             <label>Photo (optional)</label>
             <input type="file" id="foundPhoto" accept="image/*" />
+            <img id="foundPreview" alt="Found photo preview" style="display:none; max-width:220px; border-radius:8px; margin-top:8px; background:#fff" />
             <button class="btn primary" type="submit">
               Submit Found Report
             </button>
@@ -109,8 +111,30 @@
               required
             />
           </div>
+          <label>Category</label>
+          <select id="itemCategory" required>
+            <option value="">Select Category</option>
+            <option value="phones">Phone</option>
+            <option value="wallets">Wallet</option>
+            <option value="tumblers">Tumbler</option>
+            <option value="other">Other</option>
+          </select>
           <label>Item Picture</label>
-          <input id="itemPhoto" type="file" accept="image/*" required />
+          <input id="itemPhoto" type="file" accept="image/*" capture="environment" />
+          <div id="regPreviewWrap" style="margin-top:8px; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap">
+            <img id="regPreview" alt="Preview" style="display:none; max-width:220px; border-radius:8px; background:#fff" />
+            <div id="regCamPanel" style="display:none">
+              <div style="display:flex; gap:8px; margin-bottom:8px">
+                <button type="button" id="regStopCam" class="btn secondary">Stop Camera</button>
+                <button type="button" id="regCapture" class="btn primary">Capture</button>
+              </div>
+              <div id="regVideoWrap" class="video-wrap"></div>
+            </div>
+            <div id="regQuickActions" style="display:flex; gap:8px">
+              <button type="button" id="regOpenCam" class="btn">Use Camera</button>
+              <button type="button" id="regClearPhoto" class="btn secondary">Clear Photo</button>
+            </div>
+          </div>
           <button class="btn primary" type="submit">
             Register & Generate QR
           </button>
