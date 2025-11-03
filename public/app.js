@@ -2,21 +2,27 @@
 
 // Simple router to set active panel by hash
 function setActivePanel() {
-  const hash = window.location.hash || '#home';
-  document.querySelectorAll('.panel').forEach((el) => el.classList.remove('active'));
+  const hash = window.location.hash || "#home";
+  document
+    .querySelectorAll(".panel")
+    .forEach((el) => el.classList.remove("active"));
   const target = document.querySelector(hash);
-  if (target) target.classList.add('active');
-  if (hash === '#lost') loadLostItems();
+  if (target) target.classList.add("active");
+  if (hash === "#lost") loadLostItems();
   // Stop any cameras when navigating away from their panels
-  if (hash !== '#scan' && typeof window.stopScanCamera === 'function') {
-    try { window.stopScanCamera(); } catch {}
+  if (hash !== "#scan" && typeof window.stopScanCamera === "function") {
+    try {
+      window.stopScanCamera();
+    } catch {}
   }
-  if (hash !== '#register' && typeof window.stopRegCamera === 'function') {
-    try { window.stopRegCamera(); } catch {}
+  if (hash !== "#register" && typeof window.stopRegCamera === "function") {
+    try {
+      window.stopRegCamera();
+    } catch {}
   }
 }
-window.addEventListener('hashchange', setActivePanel);
-document.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener("hashchange", setActivePanel);
+document.addEventListener("DOMContentLoaded", async () => {
   setActivePanel();
   bindRegister();
   bindMyItems();
@@ -24,59 +30,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // No backend health check needed in local mode
 });
 
-// Helper: create element
-function h(tag, attrs = {}, children = []) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === 'class') {
-      el.className = v;
-    } else if (k === 'html') {
-      el.innerHTML = v;
-    } else if (k.startsWith('on') && typeof v === 'function') {
-      // Bind event listeners like onclick, oninput, etc.
-      el.addEventListener(k.slice(2), v);
-    } else {
-      el.setAttribute(k, v);
-    }
-  }
-  (Array.isArray(children) ? children : [children]).forEach((c) => {
-    if (c == null) return;
-    if (typeof c === 'string') el.appendChild(document.createTextNode(c));
-    else el.appendChild(c);
-  });
-  return el;
-}
+// helpers provided by utils.js
 
-// No asset URL rewriting needed in local mode
-function assetUrl(p) { return p; }
-
-// Category helpers
-function categoryLabel(key) {
-  const map = { phones: 'Phone', wallets: 'Wallet', tumblers: 'Tumbler', other: 'Other' };
-  return map[key] || 'Other';
-}
-function inferCategoryFromName(name) {
-  if (!name) return 'other';
-  if (/phone|iphone|android|samsung|oppo|vivo/i.test(name)) return 'phones';
-  if (/wallet/i.test(name)) return 'wallets';
-  if (/tumbler|bottle|hydro/i.test(name)) return 'tumblers';
-  return 'other';
-}
+// category helpers provided by utils.js
 
 // Register & Generate QR
 function bindRegister() {
-  const form = document.getElementById('registerForm');
+  const form = document.getElementById("registerForm");
   if (!form) return;
-  const fileInput = document.getElementById('itemPhoto');
-  const previewImg = document.getElementById('regPreview');
-  const openCamBtn = document.getElementById('regOpenCam');
-  const camPanel = document.getElementById('regCamPanel');
-  const stopCamBtn = document.getElementById('regStopCam');
-  const captureBtn = document.getElementById('regCapture');
-  const clearBtn = document.getElementById('regClearPhoto');
-  const videoWrap = document.getElementById('regVideoWrap');
-  const quickActions = document.getElementById('regQuickActions');
-  const catSelect = document.getElementById('itemCategory');
+  const fileInput = document.getElementById("itemPhoto");
+  const previewImg = document.getElementById("regPreview");
+  const openCamBtn = document.getElementById("regOpenCam");
+  const camPanel = document.getElementById("regCamPanel");
+  const stopCamBtn = document.getElementById("regStopCam");
+  const captureBtn = document.getElementById("regCapture");
+  const clearBtn = document.getElementById("regClearPhoto");
+  const videoWrap = document.getElementById("regVideoWrap");
+  const quickActions = document.getElementById("regQuickActions");
+  const catSelect = document.getElementById("itemCategory");
 
   let regMediaStream = null;
   let regCapturedDataUrl = null;
@@ -85,30 +56,34 @@ function bindRegister() {
     if (!previewImg) return;
     if (src) {
       previewImg.src = src;
-      previewImg.style.display = 'block';
+      previewImg.style.display = "block";
     } else {
-      previewImg.removeAttribute('src');
-      previewImg.style.display = 'none';
+      previewImg.removeAttribute("src");
+      previewImg.style.display = "none";
     }
   }
 
   async function startRegCamera() {
     try {
       if (regMediaStream) return; // already started
-      const video = document.createElement('video');
-      video.setAttribute('playsinline', '');
-      video.style.width = '320px';
-      video.style.height = '240px';
+      const video = document.createElement("video");
+      video.setAttribute("playsinline", "");
+      video.style.width = "320px";
+      video.style.height = "240px";
       // Mirror preview
-      video.style.transform = 'scaleX(-1)';
-      videoWrap.innerHTML = '';
+      video.style.transform = "scaleX(-1)";
+      videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
-      regMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      regMediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
       video.srcObject = regMediaStream;
       await video.play();
     } catch (e) {
-      console.error('Register camera error', e);
-      alert('Unable to access camera. Please allow permission or use file upload.');
+      console.error("Register camera error", e);
+      alert(
+        "Unable to access camera. Please allow permission or use file upload."
+      );
     }
   }
 
@@ -117,80 +92,95 @@ function bindRegister() {
       regMediaStream.getTracks().forEach((t) => t.stop());
       regMediaStream = null;
     }
-    if (videoWrap) videoWrap.innerHTML = '';
+    if (videoWrap) videoWrap.innerHTML = "";
   }
   // Expose globally so router can stop on navigation
   window.stopRegCamera = stopRegCamera;
 
   function toggleCamPanel(show) {
     if (!camPanel) return;
-    camPanel.style.display = show ? 'block' : 'none';
-    if (quickActions) quickActions.style.display = show ? 'none' : 'flex';
+    camPanel.style.display = show ? "block" : "none";
+    if (quickActions) quickActions.style.display = show ? "none" : "flex";
     if (show) startRegCamera();
     else stopRegCamera();
   }
 
-  if (fileInput) fileInput.addEventListener('change', async (e) => {
-    regCapturedDataUrl = null; // prioritize new file
-    const f = e.target.files && e.target.files[0];
-    if (!f) { showPreview(null); return; }
-    try {
-      const dataUrl = await fileToDataUrl(f, 800);
-      showPreview(dataUrl);
-    } catch (err) {
-      console.error('Preview failed', err);
+  if (fileInput)
+    fileInput.addEventListener("change", async (e) => {
+      regCapturedDataUrl = null; // prioritize new file
+      const f = e.target.files && e.target.files[0];
+      if (!f) {
+        showPreview(null);
+        return;
+      }
+      try {
+        const dataUrl = await fileToDataUrl(f, 800);
+        showPreview(dataUrl);
+      } catch (err) {
+        console.error("Preview failed", err);
+        showPreview(null);
+      }
+    });
+
+  if (openCamBtn)
+    openCamBtn.addEventListener("click", () => {
+      toggleCamPanel(true);
+    });
+  if (stopCamBtn)
+    stopCamBtn.addEventListener("click", () => toggleCamPanel(false));
+  if (clearBtn)
+    clearBtn.addEventListener("click", () => {
+      if (fileInput) fileInput.value = "";
+      regCapturedDataUrl = null;
       showPreview(null);
-    }
-  });
+    });
+  if (captureBtn)
+    captureBtn.addEventListener("click", () => {
+      // Capture current video frame to data URL
+      try {
+        const video = videoWrap && videoWrap.querySelector("video");
+        if (!video) return;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext("2d");
+        // Draw mirrored to match preview orientation
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        regCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        showPreview(regCapturedDataUrl);
+        toggleCamPanel(false);
+      } catch (e) {
+        console.error("Capture failed", e);
+        alert("Failed to capture photo.");
+      }
+    });
 
-  if (openCamBtn) openCamBtn.addEventListener('click', () => {
-    toggleCamPanel(true);
-  });
-  if (stopCamBtn) stopCamBtn.addEventListener('click', () => toggleCamPanel(false));
-  if (clearBtn) clearBtn.addEventListener('click', () => {
-    if (fileInput) fileInput.value = '';
-    regCapturedDataUrl = null;
-    showPreview(null);
-  });
-  if (captureBtn) captureBtn.addEventListener('click', () => {
-    // Capture current video frame to data URL
-    try {
-      const video = videoWrap && videoWrap.querySelector('video');
-      if (!video) return;
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext('2d');
-      // Draw mirrored to match preview orientation
-      ctx.save();
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.restore();
-      regCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-      showPreview(regCapturedDataUrl);
-      toggleCamPanel(false);
-    } catch (e) {
-      console.error('Capture failed', e);
-      alert('Failed to capture photo.');
-    }
-  });
-
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const fullName = document.getElementById('fullName').value.trim();
-    const strand = document.getElementById('strand').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const contact = document.getElementById('contact').value.trim();
-    const studentId = document.getElementById('studentId').value.trim();
-    const itemName = document.getElementById('itemName').value.trim();
-    const category = (catSelect && catSelect.value) || '';
-    if (!category) { alert('Please select a category.'); return; }
+    const fullName = document.getElementById("fullName").value.trim();
+    const strand = document.getElementById("strand").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const contact = document.getElementById("contact").value.trim();
+    const studentId = document.getElementById("studentId").value.trim();
+    const itemName = document.getElementById("itemName").value.trim();
+    const category = (catSelect && catSelect.value) || "";
+    if (!category) {
+      alert("Please select a category.");
+      return;
+    }
     const photo = fileInput && fileInput.files[0];
     // Validate unique item name per student
-    const existing = (ifoundDB.listItemsByStudent(studentId) || []).some((x) => (x.itemName || '').trim().toLowerCase() === itemName.toLowerCase());
+    const existing = (ifoundDB.listItemsByStudent(studentId) || []).some(
+      (x) => (x.itemName || "").trim().toLowerCase() === itemName.toLowerCase()
+    );
     if (existing) {
-      alert('You already registered an item with this name. Please use a different name.');
+      alert(
+        "You already registered an item with this name. Please use a different name."
+      );
       return;
     }
 
@@ -203,7 +193,7 @@ function bindRegister() {
         photoDataUrl = await fileToDataUrl(photo, 800);
       }
       if (!photoDataUrl) {
-        alert('Please add a photo via upload or camera.');
+        alert("Please add a photo via upload or camera.");
         return;
       }
       const item = ifoundDB.addItem({
@@ -216,15 +206,15 @@ function bindRegister() {
         photoDataUrl,
         category,
       });
-      const sidInput = document.getElementById('myStudentId');
+      const sidInput = document.getElementById("myStudentId");
       if (sidInput) sidInput.value = item.studentId;
-      window.location.hash = '#myitems';
-      const showBtn = document.getElementById('myItemsBtn');
+      window.location.hash = "#myitems";
+      const showBtn = document.getElementById("myItemsBtn");
       if (showBtn) showBtn.click();
-      alert('Registered! Your QR is available under My Registered Items.');
+      alert("Registered! Your QR is available under My Registered Items.");
     } catch (err) {
       console.error(err);
-      alert('Failed to register. Please try again.');
+      alert("Failed to register. Please try again.");
     }
   });
 }
@@ -234,44 +224,49 @@ let scannedItemId = null;
 let mediaStream = null;
 let scanning = false;
 function bindScan() {
-  const startBtn = document.getElementById('start-camera');
-  const stopBtn = document.getElementById('stop-camera');
-  const videoWrap = document.querySelector('.video-wrap');
-  const resultCard = document.getElementById('scan-result');
-  const foundForm = document.getElementById('foundForm');
-  const imgFile = document.getElementById('img-file');
-  const foundPhotoInput = document.getElementById('foundPhoto');
-  const foundPreview = document.getElementById('foundPreview');
+  const startBtn = document.getElementById("start-camera");
+  const stopBtn = document.getElementById("stop-camera");
+  const videoWrap = document.querySelector(".video-wrap");
+  const resultCard = document.getElementById("scan-result");
+  const foundForm = document.getElementById("foundForm");
+  const imgFile = document.getElementById("img-file");
+  const foundPhotoInput = document.getElementById("foundPhoto");
+  const foundPreview = document.getElementById("foundPreview");
 
-  if (resultCard) resultCard.innerHTML = '<div><em>Waiting for scan...</em></div>';
+  if (resultCard)
+    resultCard.innerHTML = "<div><em>Waiting for scan...</em></div>";
 
   async function startCameraScan() {
-    if (!('BarcodeDetector' in window)) {
-      alert('QR scanning is not supported in this browser. Try Chrome/Edge or use the image upload.');
+    if (!("BarcodeDetector" in window)) {
+      alert(
+        "QR scanning is not supported in this browser. Try Chrome/Edge or use the image upload."
+      );
       return;
     }
     try {
-      const video = document.createElement('video');
-      video.setAttribute('playsinline', '');
-      video.style.width = '360px';
-      video.style.height = '270px';
+      const video = document.createElement("video");
+      video.setAttribute("playsinline", "");
+      video.style.width = "360px";
+      video.style.height = "270px";
       // Mirror preview so movement looks natural
-      video.style.transform = 'scaleX(-1)';
-      videoWrap.innerHTML = '';
+      video.style.transform = "scaleX(-1)";
+      videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
 
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
       video.srcObject = mediaStream;
       await video.play();
 
-      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const detector = new BarcodeDetector({ formats: ["qr_code"] });
       scanning = true;
       const tick = async () => {
         if (!scanning) return;
         try {
           const codes = await detector.detect(video);
           if (codes && codes.length) {
-            scannedItemId = (codes[0].rawValue || '').trim();
+            scannedItemId = (codes[0].rawValue || "").trim();
             await stopCamera();
             loadScannedItem(scannedItemId, resultCard);
             return;
@@ -282,7 +277,9 @@ function bindScan() {
       requestAnimationFrame(tick);
     } catch (e) {
       console.error(e);
-      alert('Camera access failed. Please allow permission or use the image upload.');
+      alert(
+        "Camera access failed. Please allow permission or use the image upload."
+      );
     }
   }
 
@@ -292,101 +289,116 @@ function bindScan() {
       mediaStream.getTracks().forEach((t) => t.stop());
       mediaStream = null;
     }
-    if (videoWrap) videoWrap.innerHTML = '';
+    if (videoWrap) videoWrap.innerHTML = "";
   }
   // expose globally so router can stop when leaving panel
   window.stopScanCamera = stopCamera;
 
   async function decodeFromImage(file) {
-    if (!('BarcodeDetector' in window)) {
-      alert('QR decoding from image is not supported in this browser.');
+    if (!("BarcodeDetector" in window)) {
+      alert("QR decoding from image is not supported in this browser.");
       return;
     }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = async () => {
       try {
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        const canvas = document.createElement('canvas');
+        const detector = new BarcodeDetector({ formats: ["qr_code"] });
+        const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
         const codes = await detector.detect(canvas);
         if (codes && codes.length) {
-          scannedItemId = (codes[0].rawValue || '').trim();
+          scannedItemId = (codes[0].rawValue || "").trim();
           loadScannedItem(scannedItemId, resultCard);
         } else {
-          alert('No QR found in the image.');
+          alert("No QR found in the image.");
         }
       } catch (e) {
         console.error(e);
-        alert('Failed to decode the image.');
+        alert("Failed to decode the image.");
       } finally {
         URL.revokeObjectURL(url);
       }
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      alert('Failed to load the image.');
+      alert("Failed to load the image.");
     };
     img.src = url;
   }
 
-  if (startBtn && videoWrap) startBtn.addEventListener('click', startCameraScan);
-  if (stopBtn) stopBtn.addEventListener('click', stopCamera);
-  if (imgFile) imgFile.addEventListener('change', (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (f) decodeFromImage(f);
-  });
+  if (startBtn && videoWrap)
+    startBtn.addEventListener("click", startCameraScan);
+  if (stopBtn) stopBtn.addEventListener("click", stopCamera);
+  if (imgFile)
+    imgFile.addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) decodeFromImage(f);
+    });
 
   if (foundPhotoInput && foundPreview) {
-    foundPhotoInput.addEventListener('change', async (e) => {
+    foundPhotoInput.addEventListener("change", async (e) => {
       const f = e.target.files && e.target.files[0];
-      if (!f) { foundPreview.style.display = 'none'; foundPreview.removeAttribute('src'); return; }
+      if (!f) {
+        foundPreview.style.display = "none";
+        foundPreview.removeAttribute("src");
+        return;
+      }
       try {
         const dataUrl = await fileToDataUrl(f, 800);
         foundPreview.src = dataUrl;
-        foundPreview.style.display = 'block';
+        foundPreview.style.display = "block";
       } catch (err) {
-        console.error('Found preview failed', err);
-        foundPreview.style.display = 'none';
-        foundPreview.removeAttribute('src');
+        console.error("Found preview failed", err);
+        foundPreview.style.display = "none";
+        foundPreview.removeAttribute("src");
       }
     });
   }
 
   if (foundForm) {
-    foundForm.addEventListener('submit', async (e) => {
+    foundForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!scannedItemId) {
-        alert('Scan an item QR first.');
+        alert("Scan an item QR first.");
         return;
       }
-      const finderName = document.getElementById('finderName').value.trim();
-      const location = document.getElementById('foundLocation').value.trim();
-      const photo = document.getElementById('foundPhoto').files[0];
+      const finderName = document.getElementById("finderName").value.trim();
+      const location = document.getElementById("foundLocation").value.trim();
+      const photo = document.getElementById("foundPhoto").files[0];
       try {
         let photoDataUrl = null;
         if (photo) photoDataUrl = await fileToDataUrl(photo, 800);
-        const r = ifoundDB.addFoundReport({ itemId: scannedItemId, finderName, location, photoDataUrl });
-        if (!r) throw new Error('Submit failed');
-        alert('Report submitted. Thank you!');
+        const r = ifoundDB.addFoundReport({
+          itemId: scannedItemId,
+          finderName,
+          location,
+          photoDataUrl,
+        });
+        if (!r) throw new Error("Submit failed");
+        alert("Report submitted. Thank you!");
         foundForm.reset();
         // Clear found photo preview and input
-        const foundPreviewEl = document.getElementById('foundPreview');
-        const foundPhotoEl = document.getElementById('foundPhoto');
-        if (foundPreviewEl) { foundPreviewEl.style.display = 'none'; foundPreviewEl.removeAttribute('src'); }
-        if (foundPhotoEl) foundPhotoEl.value = '';
+        const foundPreviewEl = document.getElementById("foundPreview");
+        const foundPhotoEl = document.getElementById("foundPhoto");
+        if (foundPreviewEl) {
+          foundPreviewEl.style.display = "none";
+          foundPreviewEl.removeAttribute("src");
+        }
+        if (foundPhotoEl) foundPhotoEl.value = "";
         // Reset scan state: clear result card and image QR file input
-        const resultCard = document.getElementById('scan-result');
-        if (resultCard) resultCard.innerHTML = '<div><em>Waiting for scan...</em></div>';
-        const qrImgFile = document.getElementById('img-file');
-        if (qrImgFile) qrImgFile.value = '';
+        const resultCard = document.getElementById("scan-result");
+        if (resultCard)
+          resultCard.innerHTML = "<div><em>Waiting for scan...</em></div>";
+        const qrImgFile = document.getElementById("img-file");
+        if (qrImgFile) qrImgFile.value = "";
         scannedItemId = null;
       } catch (err) {
         console.error(err);
-        alert('Failed to submit report.');
+        alert("Failed to submit report.");
       }
     });
   }
@@ -395,106 +407,195 @@ function bindScan() {
 async function loadScannedItem(itemId, container) {
   try {
     const it = ifoundDB.getItem(itemId);
-    if (!it) throw new Error('Item not found');
-    const wrap = h('div', {}, [
-      h('div', { style: 'display:flex; gap:12px; align-items:flex-start' }, [
-  it.photoPath ? h('img', { src: assetUrl(it.photoPath), style: 'max-width:160px;border-radius:6px' }) : null,
-        h('div', {}, [
-          h('div', { html: `<strong>${it.itemName}</strong>` }),
-          h('div', {}, `Owner: ${it.ownerName} (${it.contact || 'n/a'})`),
-          h('div', {}, `Status: ${it.status}`),
-          it.lastClaimedAt ? h('div', { style: 'font-size:12px;color:#6b7280' }, `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`) : null,
+    if (!it) throw new Error("Item not found");
+    const wrap = h("div", {}, [
+      h("div", { style: "display:flex; gap:12px; align-items:flex-start" }, [
+        it.photoPath
+          ? h("img", {
+              src: assetUrl(it.photoPath),
+              style: "max-width:160px;border-radius:6px",
+            })
+          : null,
+        h("div", {}, [
+          h("div", { html: `<strong>${it.itemName}</strong>` }),
+          h("div", {}, `Owner: ${it.ownerName} (${it.contact || "n/a"})`),
+          h("div", {}, `Status: ${it.status}`),
+          it.lastClaimedAt
+            ? h(
+                "div",
+                { style: "font-size:12px;color:#6b7280" },
+                `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`
+              )
+            : null,
         ]),
       ]),
     ]);
-    container.innerHTML = '';
+    container.innerHTML = "";
     container.appendChild(wrap);
   } catch (e) {
-    container.innerHTML = '<div><strong>Item not found</strong></div>';
+    container.innerHTML = "<div><strong>Item not found</strong></div>";
   }
 }
 
 // My Registered Items
 function bindMyItems() {
-  const btn = document.getElementById('myItemsBtn');
-  const list = document.getElementById('myItemsList');
+  const btn = document.getElementById("myItemsBtn");
+  const list = document.getElementById("myItemsList");
   if (!btn || !list) return;
   // Clear static examples
-  list.innerHTML = '';
-  btn.addEventListener('click', async () => {
-    const sid = document.getElementById('myStudentId').value.trim();
-    if (!sid) return alert('Enter Student ID');
+  list.innerHTML = "";
+  btn.addEventListener("click", async () => {
+    const sid = document.getElementById("myStudentId").value.trim();
+    if (!sid) return alert("Enter Student ID");
     try {
       const items = ifoundDB.listItemsByStudent(sid);
-      list.innerHTML = '';
+      list.innerHTML = "";
       if (!items.length) {
-        list.appendChild(h('div', {}, 'No items found.'));
+        list.appendChild(h("div", {}, "No items found."));
         return;
       }
       items.forEach((it) => {
-        list.appendChild(h('div', { class: 'card', style: 'margin-bottom:8px' }, [
-          h('div', { html: `<strong>${it.itemName}</strong> <span class="status-${it.status}">${it.status}</span>` }),
-          it.photoPath ? h('img', { src: assetUrl(it.photoPath), style: 'max-width:200px;margin-top:8px' }) : null,
-          h('div', { style: 'margin-top:6px;font-size:12px;color:#6b7280' }, `Category: ${categoryLabel(it.category || inferCategoryFromName(it.itemName))}`),
-          h('div', { style: 'margin-top:8px;display:flex;gap:8px;align-items:center' }, [
-            h('img', { src: ifoundDB.qrUrlFor(it.id), alt: 'QR', style: 'width:120px;height:120px;background:#fff;padding:6px;border-radius:8px' }),
-            h('a', { href: '#', class: 'btn', onclick: (e) => { e.preventDefault(); downloadQr(it.id); } }, 'Download QR')
-          ]),
-        ]));
+        list.appendChild(
+          h("div", { class: "card", style: "margin-bottom:8px" }, [
+            h("div", {
+              html: `<strong>${it.itemName}</strong> <span class="status-${it.status}">${it.status}</span>`,
+            }),
+            it.photoPath
+              ? h("img", {
+                  src: assetUrl(it.photoPath),
+                  style: "max-width:200px;margin-top:8px",
+                })
+              : null,
+            h(
+              "div",
+              { style: "margin-top:6px;font-size:12px;color:#6b7280" },
+              `Category: ${categoryLabel(
+                it.category || inferCategoryFromName(it.itemName)
+              )}`
+            ),
+            h(
+              "div",
+              {
+                style: "margin-top:8px;display:flex;gap:8px;align-items:center",
+              },
+              [
+                h("img", {
+                  src: ifoundDB.qrUrlFor(it.id),
+                  alt: "QR",
+                  style:
+                    "width:120px;height:120px;background:#fff;padding:6px;border-radius:8px",
+                }),
+                h(
+                  "a",
+                  {
+                    href: "#",
+                    class: "btn",
+                    onclick: (e) => {
+                      e.preventDefault();
+                      downloadQr(it.id);
+                    },
+                  },
+                  "Download QR"
+                ),
+              ]
+            ),
+          ])
+        );
       });
     } catch (err) {
       console.error(err);
-      alert('Failed to fetch items');
+      alert("Failed to fetch items");
     }
   });
 }
 
 // Lost Items list and Claim
 async function loadLostItems() {
-  const list = document.getElementById('itemsList');
+  const list = document.getElementById("itemsList");
   if (!list) return;
   try {
     const items = ifoundDB.listLostItems();
-    list.innerHTML = '';
-    const search = document.getElementById('searchBar').value.trim().toLowerCase();
-    const cat = (document.getElementById('categoryFilter').value || 'all').toLowerCase();
+    list.innerHTML = "";
+    const search = document
+      .getElementById("searchBar")
+      .value.trim()
+      .toLowerCase();
+    const cat = (
+      document.getElementById("categoryFilter").value || "all"
+    ).toLowerCase();
     items
       .filter((it) => {
-        const hit = `${it.itemName} ${it.ownerName}`.toLowerCase().includes(search);
-        const itemCat = (it.category || inferCategoryFromName(it.itemName));
-        const inCat = cat === 'all' || itemCat === cat;
+        const hit = `${it.itemName} ${it.ownerName}`
+          .toLowerCase()
+          .includes(search);
+        const itemCat = it.category || inferCategoryFromName(it.itemName);
+        const inCat = cat === "all" || itemCat === cat;
         return hit && inCat;
       })
       .forEach((it) => {
         const primaryPhoto = it.foundPhotoPath || it.photoPath;
-        const secondaryPhoto = it.foundPhotoPath && it.photoPath ? it.photoPath : null;
-        const card = h('div', { class: 'item card' }, [
-          primaryPhoto ? h('img', { src: assetUrl(primaryPhoto), alt: it.itemName }) : null,
-          h('div', { class: 'meta' }, [
-            h('strong', {}, it.itemName),
-            h('div', {}, `Owner: ${it.ownerName}`),
-            h('div', { style: 'margin-top:4px;color:#6b7280;font-size:12px' }, `Category: ${categoryLabel(it.category || inferCategoryFromName(it.itemName))}`),
-            it.lastClaimedAt ? h('div', { style: 'margin-top:4px;color:#6b7280;font-size:12px' }, `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`) : null,
-            secondaryPhoto ? h('div', { style: 'margin-top:8px' }, [
-              h('img', { src: assetUrl(secondaryPhoto), alt: 'Owner Photo', style: 'max-width:140px;border-radius:6px;opacity:0.9' })
-            ]) : null,
-            h('div', { style: 'margin-top:8px' }, [
-              h('button', { class: 'btn', onclick: async () => {
-                const sid = prompt('Enter owner\'s Student ID to claim:');
-                if (!sid) return;
-                const sameId = (sid || '').trim() === (it.studentId || '').trim();
-                if (!sameId) {
-                  alert('Student ID does not match the registered owner. Cannot claim.');
-                  return;
-                }
-                const r = ifoundDB.addClaim({ itemId: it.id, claimantName: it.ownerName || 'Owner' });
-                if (r) {
-                  alert('Claim submitted.');
-                  loadLostItems();
-                } else alert('Failed to claim');
-              } }, 'Claim')
-            ])
-          ])
+        const secondaryPhoto =
+          it.foundPhotoPath && it.photoPath ? it.photoPath : null;
+        const card = h("div", { class: "item card" }, [
+          primaryPhoto
+            ? h("img", { src: assetUrl(primaryPhoto), alt: it.itemName })
+            : null,
+          h("div", { class: "meta" }, [
+            h("strong", {}, it.itemName),
+            h("div", {}, `Owner: ${it.ownerName}`),
+            h(
+              "div",
+              { style: "margin-top:4px;color:#6b7280;font-size:12px" },
+              `Category: ${categoryLabel(
+                it.category || inferCategoryFromName(it.itemName)
+              )}`
+            ),
+            it.lastClaimedAt
+              ? h(
+                  "div",
+                  { style: "margin-top:4px;color:#6b7280;font-size:12px" },
+                  `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`
+                )
+              : null,
+            secondaryPhoto
+              ? h("div", { style: "margin-top:8px" }, [
+                  h("img", {
+                    src: assetUrl(secondaryPhoto),
+                    alt: "Owner Photo",
+                    style: "max-width:140px;border-radius:6px;opacity:0.9",
+                  }),
+                ])
+              : null,
+            h("div", { style: "margin-top:8px" }, [
+              h(
+                "button",
+                {
+                  class: "btn",
+                  onclick: async () => {
+                    const sid = prompt("Enter owner's Student ID to claim:");
+                    if (!sid) return;
+                    const sameId =
+                      (sid || "").trim() === (it.studentId || "").trim();
+                    if (!sameId) {
+                      alert(
+                        "Student ID does not match the registered owner. Cannot claim."
+                      );
+                      return;
+                    }
+                    const r = ifoundDB.addClaim({
+                      itemId: it.id,
+                      claimantName: it.ownerName || "Owner",
+                    });
+                    if (r) {
+                      alert("Claim submitted.");
+                      loadLostItems();
+                    } else alert("Failed to claim");
+                  },
+                },
+                "Claim"
+              ),
+            ]),
+          ]),
         ]);
         list.appendChild(card);
       });
@@ -505,54 +606,11 @@ async function loadLostItems() {
 }
 
 // Filters reload
-document.addEventListener('DOMContentLoaded', () => {
-  const search = document.getElementById('searchBar');
-  const cat = document.getElementById('categoryFilter');
-  if (search) search.addEventListener('input', loadLostItems);
-  if (cat) cat.addEventListener('change', loadLostItems);
+document.addEventListener("DOMContentLoaded", () => {
+  const search = document.getElementById("searchBar");
+  const cat = document.getElementById("categoryFilter");
+  if (search) search.addEventListener("input", loadLostItems);
+  if (cat) cat.addEventListener("change", loadLostItems);
 });
 
-// Helpers
-function fileToDataUrl(file, maxWidth) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.naturalWidth || 1);
-        const w = Math.round(img.naturalWidth * scale);
-        const h = Math.round(img.naturalHeight * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.onerror = reject;
-      img.src = reader.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// Download QR image as a file without opening a new tab
-async function downloadQr(itemId) {
-  try {
-    const url = ifoundDB.qrUrlFor(itemId);
-    const res = await fetch(url, { mode: 'cors' });
-    const blob = await res.blob();
-    const obj = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = obj;
-    a.download = `item-${itemId}-qr.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(obj);
-  } catch (e) {
-    // Fallback: open in new tab if direct download fails
-    window.open(ifoundDB.qrUrlFor(itemId), '_blank');
-  }
-}
+// fileToDataUrl and downloadQr provided by utils.js
