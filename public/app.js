@@ -465,52 +465,60 @@ function bindMyItems() {
         return;
       }
       items.forEach((item) => {
-        list.appendChild(
-          h("div", { class: "card", style: "margin-bottom:8px" }, [
-            h("div", {
-              html: `<strong>${item.itemName}</strong> <span class="status-${item.status}">${item.status}</span>`,
-            }),
-            item.photoPath
-              ? h("img", {
-                  src: assetUrl(item.photoPath),
-                  style: "max-width:200px;margin-top:8px",
-                })
-              : null,
-            h(
-              "div",
-              { style: "margin-top:6px;font-size:12px;color:#6b7280" },
-              `Category: ${categoryLabel(
-                item.category || inferCategoryFromName(item.itemName)
-              )}`
-            ),
-            h(
-              "div",
-              {
-                style: "margin-top:8px;display:flex;gap:8px;align-items:center",
-              },
-              [
-                h("img", {
-                  src: ifoundDB.qrUrlFor(item.id),
-                  alt: "QR",
-                  style:
-                    "width:120px;height:120px;background:#fff;padding:6px;border-radius:8px",
-                }),
-                h(
-                  "a",
-                  {
-                    href: "#",
-                    class: "btn",
-                    onclick: (e) => {
-                      e.preventDefault();
-                      downloadQr(item.id);
-                    },
+        // Create card and async-generate QR to keep UI responsive
+        const qrImg = h("img", {
+          alt: "QR",
+          style:
+            "width:120px;height:120px;background:#fff;padding:6px;border-radius:8px",
+        });
+        const card = h("div", { class: "card", style: "margin-bottom:8px" }, [
+          h("div", {
+            html: `<strong>${item.itemName}</strong> <span class=\"status-${item.status}\">${item.status}</span>`,
+          }),
+          item.photoPath
+            ? h("img", {
+                src: assetUrl(item.photoPath),
+                style: "max-width:200px;margin-top:8px",
+              })
+            : null,
+          h(
+            "div",
+            { style: "margin-top:6px;font-size:12px;color:#6b7280" },
+            `Category: ${categoryLabel(
+              item.category || inferCategoryFromName(item.itemName)
+            )}`
+          ),
+          h(
+            "div",
+            {
+              style: "margin-top:8px;display:flex;gap:8px;align-items:center",
+            },
+            [
+              qrImg,
+              h(
+                "a",
+                {
+                  href: "#",
+                  class: "btn",
+                  onclick: (e) => {
+                    e.preventDefault();
+                    downloadQr(item.id);
                   },
-                  "Download QR"
-                ),
-              ]
-            ),
-          ])
-        );
+                },
+                "Download QR"
+              ),
+            ]
+          ),
+        ]);
+        list.appendChild(card);
+        // Generate QR offline and set image src
+        generateQrDataUrl(String(item.id), 200)
+          .then((url) => {
+            qrImg.setAttribute("src", url);
+          })
+          .catch(() => {
+            qrImg.setAttribute("alt", "QR generation failed");
+          });
       });
     } catch (err) {
       console.error(err);

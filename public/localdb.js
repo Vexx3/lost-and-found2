@@ -9,7 +9,7 @@
 
   Public API (window.ifoundDB): addItem, getItem, listItemsByStudent, listLostItems,
   addFoundReport, listPendingReportsWithItem, verifyReportMoveToLost, addClaim,
-  listClaimsWithItem, analytics, exportAll, importMerge, qrUrlFor
+  listClaimsWithItem, analytics, exportAll, importMerge
 */
 
 (function () {
@@ -238,12 +238,6 @@
     return true;
   }
 
-  function qrUrlFor(itemId) {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-      itemId
-    )}`;
-  }
-
   window.ifoundDB = {
     addItem,
     getItem,
@@ -257,6 +251,5 @@
     analytics,
     exportAll,
     importMerge,
-    qrUrlFor,
   };
 })();

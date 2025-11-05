@@ -7,7 +7,7 @@
   - assetUrl(path): passthrough, kept for future hosting tweaks
   - categoryLabel(key), inferCategoryFromName(name)
   - fileToDataUrl(file, maxWidth): downscale image to JPEG data URL
-  - downloadQr(itemId): fetch and download a QR image as a file
+  - downloadQr(itemId): generate and download a QR image as a file
 */
 
 // Minimal DOM element helper with safe event binding
@@ -79,8 +79,8 @@ function fileToDataUrl(file, maxWidth) {
 
 async function downloadQr(itemId) {
   try {
-    const url = ifoundDB.qrUrlFor(itemId);
-    const res = await fetch(url, { mode: "cors" });
+    const dataUrl = await generateQrDataUrl(String(itemId), 200);
+    const res = await fetch(dataUrl);
     const blob = await res.blob();
     const obj = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -91,6 +91,49 @@ async function downloadQr(itemId) {
     a.remove();
     URL.revokeObjectURL(obj);
   } catch (e) {
-    window.open(ifoundDB.qrUrlFor(itemId), "_blank");
+    alert("Failed to generate QR for download.");
   }
+}
+
+// Generate a QR code as a Data URL completely offline (requires QRCode from qrcodejs)
+function generateQrDataUrl(text, size = 200) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (typeof QRCode === "undefined") {
+        reject(new Error("QRCode library not loaded"));
+        return;
+      }
+      const host = document.createElement("div");
+      host.style.position = "absolute";
+      host.style.left = "-9999px";
+      host.style.top = "-9999px";
+      document.body.appendChild(host);
+      new QRCode(host, {
+        text: String(text || ""),
+        width: size,
+        height: size,
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+      // Allow qrcodejs to render DOM, then extract data URL
+      requestAnimationFrame(() => {
+        try {
+          const canvas = host.querySelector("canvas");
+          const img = host.querySelector("img");
+          const url = canvas
+            ? canvas.toDataURL("image/png")
+            : img && img.src
+            ? img.src
+            : null;
+          host.remove();
+          if (!url) return reject(new Error("QR render failed"));
+          resolve(url);
+        } catch (err) {
+          host.remove();
+          reject(err);
+        }
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
