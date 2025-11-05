@@ -1,5 +1,3 @@
-/* Frontend logic for index.html (localStorage version) */
-
 // Simple router to set active panel by hash
 function setActivePanel() {
   const hash = window.location.hash || "#home";
@@ -9,7 +7,6 @@ function setActivePanel() {
   const target = document.querySelector(hash);
   if (target) target.classList.add("active");
   if (hash === "#lost") loadLostItems();
-  // Stop any cameras when navigating away from their panels
   if (hash !== "#scan" && typeof window.stopScanCamera === "function") {
     try {
       window.stopScanCamera();
@@ -27,12 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindRegister();
   bindMyItems();
   bindScan();
-  // No backend health check needed in local mode
 });
-
-// helpers provided by utils.js
-
-// category helpers provided by utils.js
 
 // Register & Generate QR
 function bindRegister() {
@@ -70,7 +62,6 @@ function bindRegister() {
       video.setAttribute("playsinline", "");
       video.style.width = "320px";
       video.style.height = "240px";
-      // Mirror preview
       video.style.transform = "scaleX(-1)";
       videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
@@ -94,7 +85,7 @@ function bindRegister() {
     }
     if (videoWrap) videoWrap.innerHTML = "";
   }
-  // Expose globally so router can stop on navigation
+
   window.stopRegCamera = stopRegCamera;
 
   function toggleCamPanel(show) {
@@ -219,7 +210,7 @@ function bindRegister() {
   });
 }
 
-// Scan QR (camera) using native BarcodeDetector (no external CDN)
+// Scan QR (camera) using native BarcodeDetector
 let scannedItemId = null;
 let mediaStream = null;
 let scanning = false;
@@ -442,7 +433,7 @@ function bindMyItems() {
   const btn = document.getElementById("myItemsBtn");
   const list = document.getElementById("myItemsList");
   if (!btn || !list) return;
-  // Clear static examples
+
   list.innerHTML = "";
   btn.addEventListener("click", async () => {
     const sid = document.getElementById("myStudentId").value.trim();
@@ -612,5 +603,3 @@ document.addEventListener("DOMContentLoaded", () => {
   if (search) search.addEventListener("input", loadLostItems);
   if (cat) cat.addEventListener("change", loadLostItems);
 });
-
-// fileToDataUrl and downloadQr provided by utils.js

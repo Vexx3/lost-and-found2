@@ -1,15 +1,9 @@
-/* Admin dashboard logic (localStorage version)
-  Depends on utils.js (h, assetUrl).
-*/
-
 document.addEventListener("DOMContentLoaded", () => {
   loadPending();
   loadClaims();
   loadAnalytics();
   bindDataControls();
 });
-
-// h and assetUrl are provided by utils.js
 
 async function loadPending() {
   const container = document.getElementById("reports");

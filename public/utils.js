@@ -1,6 +1,3 @@
-/* Shared utilities for ifound (DOM + helpers)
-   Principles: KISS, DRY, SoC — only small globals used across pages. */
-
 // Minimal DOM element helper with safe event binding
 function h(tag, attrs = {}, children = []) {
   const el = document.createElement(tag);

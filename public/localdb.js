@@ -1,4 +1,3 @@
-/* Simple localStorage-backed DB for ifound (dev/test only) */
 (function () {
   const DB_KEY = "ifound_store_v1";
 
