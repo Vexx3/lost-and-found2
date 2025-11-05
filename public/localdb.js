@@ -1,3 +1,17 @@
+/*
+  localdb.js
+  A tiny in-browser data layer backed by localStorage.
+
+  Collections:
+  - items: registered items { id, itemName, studentId, ownerName, category, contact/email/strand, photoPath, status, createdAt, foundPhotoPath?, lastClaimedAt? }
+  - found_reports: reports from finders { id, itemId, finderName, location, photoPath?, status, createdAt }
+  - claims: claims submitted by owners { id, itemId, claimantName, createdAt }
+
+  Public API (window.ifoundDB): addItem, getItem, listItemsByStudent, listLostItems,
+  addFoundReport, listPendingReportsWithItem, verifyReportMoveToLost, addClaim,
+  listClaimsWithItem, analytics, exportAll, importMerge, qrUrlFor
+*/
+
 (function () {
   const DB_KEY = "ifound_store_v1";
 
@@ -55,6 +69,7 @@
     photoDataUrl,
     category,
   }) {
+    // Create and persist a new item
     const db = load();
     const id = uuidv4();
     const item = {
@@ -78,27 +93,29 @@
 
   function getItem(id) {
     const db = load();
-    return db.items.find((i) => i.id === id) || null;
+    const item = db.items.find((x) => x.id === id) || null;
+    return item;
   }
 
   function listItemsByStudent(studentId) {
     const db = load();
     return db.items
-      .filter((i) => i.studentId === studentId)
+      .filter((item) => item.studentId === studentId)
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }
 
   function listLostItems() {
     const db = load();
     return db.items
-      .filter((i) => i.status === "lost")
+      .filter((item) => item.status === "lost")
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }
 
   function addFoundReport({ itemId, finderName, location, photoDataUrl }) {
+    // Create a new found report linked to an item
     const db = load();
     db.seq.found_reports = (db.seq.found_reports || 0) + 1;
-    const fr = {
+    const report = {
       id: db.seq.found_reports,
       itemId,
       finderName,
@@ -107,68 +124,75 @@
       status: "pending",
       createdAt: nowIso(),
     };
-    db.found_reports.push(fr);
+    db.found_reports.push(report);
     save(db);
-    return fr;
+    return report;
   }
 
   function listPendingReportsWithItem() {
     const db = load();
     return db.found_reports
-      .filter((r) => r.status === "pending")
+      .filter((report) => report.status === "pending")
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-      .map((r) => {
-        const it = db.items.find((i) => i.id === r.itemId);
+      .map((report) => {
+        const item = db.items.find((x) => x.id === report.itemId);
         return {
-          ...r,
-          itemName: it?.itemName || "Unknown",
-          ownerName: it?.ownerName || "",
-          itemPhoto: it?.photoPath || null,
+          ...report,
+          itemName: item?.itemName || "Unknown",
+          ownerName: item?.ownerName || "",
+          itemPhoto: item?.photoPath || null,
         };
       });
   }
 
   function verifyReportMoveToLost(reportId) {
+    // Verify a found report and mark its item as lost
     const db = load();
     const rid = Number(reportId);
-    const r = db.found_reports.find((x) => Number(x.id) === rid);
-    if (!r) return false;
-    const it = db.items.find((i) => i.id === r.itemId);
-    if (!it) return false;
-    r.status = "verified";
-    it.status = "lost";
+    const report = db.found_reports.find((x) => Number(x.id) === rid);
+    if (!report) return false;
+    const item = db.items.find((x) => x.id === report.itemId);
+    if (!item) return false;
+    report.status = "verified";
+    item.status = "lost";
     // If finder provided a photo, prefer it for lost listing, but keep owner photo as fallback
-    if (r.photoPath) {
-      it.foundPhotoPath = r.photoPath;
+    if (report.photoPath) {
+      item.foundPhotoPath = report.photoPath;
     }
     save(db);
     return true;
   }
 
   function addClaim({ itemId, claimantName }) {
+    // Mark item as claimed and create a claim record
     const db = load();
-    const it = db.items.find((i) => i.id === itemId);
-    if (!it) return null;
+    const item = db.items.find((x) => x.id === itemId);
+    if (!item) return null;
     db.seq.claims = (db.seq.claims || 0) + 1;
-    const cl = { id: db.seq.claims, itemId, claimantName, createdAt: nowIso() };
-    db.claims.push(cl);
-    it.status = "claimed";
-    it.lastClaimedAt = cl.createdAt;
+    const claim = {
+      id: db.seq.claims,
+      itemId,
+      claimantName,
+      createdAt: nowIso(),
+    };
+    db.claims.push(claim);
+    item.status = "claimed";
+    item.lastClaimedAt = claim.createdAt;
     save(db);
-    return cl;
+    return claim;
   }
 
   function listClaimsWithItem() {
     const db = load();
     return db.claims
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-      .map((c) => {
-        const it = db.items.find((i) => i.id === c.itemId);
+      .map((claim) => {
+        const item = db.items.find((x) => x.id === claim.itemId);
         return {
-          ...c,
-          itemName: it?.itemName || "",
-          ownerName: it?.ownerName || "",
-          studentId: it?.studentId || "",
+          ...claim,
+          itemName: item?.itemName || "",
+          ownerName: item?.ownerName || "",
+          studentId: item?.studentId || "",
         };
       });
   }
@@ -215,7 +239,6 @@
   }
 
   function qrUrlFor(itemId) {
-    // Use public QR service for demo only
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
       itemId
     )}`;

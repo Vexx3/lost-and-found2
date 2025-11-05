@@ -1,3 +1,15 @@
+/*
+  utils.js
+  Small shared helpers used across the app/admin pages.
+
+  Exposes functions on the global window scope:
+  - h(tag, attrs, children): create a DOM node quickly
+  - assetUrl(path): passthrough, kept for future hosting tweaks
+  - categoryLabel(key), inferCategoryFromName(name)
+  - fileToDataUrl(file, maxWidth): downscale image to JPEG data URL
+  - downloadQr(itemId): fetch and download a QR image as a file
+*/
+
 // Minimal DOM element helper with safe event binding
 function h(tag, attrs = {}, children = []) {
   const el = document.createElement(tag);
@@ -40,6 +52,7 @@ function inferCategoryFromName(name) {
 }
 
 // Image helpers
+// Convert a File into a downscaled JPEG data URL
 function fileToDataUrl(file, maxWidth) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -64,7 +77,6 @@ function fileToDataUrl(file, maxWidth) {
   });
 }
 
-// Download an external image as a file without opening a new tab
 async function downloadQr(itemId) {
   try {
     const url = ifoundDB.qrUrlFor(itemId);

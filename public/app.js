@@ -1,3 +1,15 @@
+/*
+  App logic (client-only, localStorage-backed)
+  - Router: show one panel per hash, stop cameras when leaving
+  - Register: upload/capture photo, validate, save, and show QR in My Items
+  - Scan: camera or image upload QR scanning, submit found reports
+  - My Items: list user's items with QR download
+  - Lost Items: searchable/filterable list with claim action
+
+  Depends on utils.js (h, assetUrl, categoryLabel, inferCategoryFromName, fileToDataUrl, downloadQr)
+  and localdb.js (ifoundDB).
+*/
+
 // Simple router to set active panel by hash
 function setActivePanel() {
   const hash = window.location.hash || "#home";
@@ -55,6 +67,7 @@ function bindRegister() {
     }
   }
 
+  // Start camera for Register capture (mirrored preview)
   async function startRegCamera() {
     try {
       if (regMediaStream) return; // already started
@@ -78,6 +91,7 @@ function bindRegister() {
     }
   }
 
+  // Stop Register camera stream and clear preview
   function stopRegCamera() {
     if (regMediaStream) {
       regMediaStream.getTracks().forEach((t) => t.stop());
@@ -88,6 +102,7 @@ function bindRegister() {
 
   window.stopRegCamera = stopRegCamera;
 
+  // Toggle Register camera panel visibility
   function toggleCamPanel(show) {
     if (!camPanel) return;
     camPanel.style.display = show ? "block" : "none";
@@ -227,6 +242,7 @@ function bindScan() {
   if (resultCard)
     resultCard.innerHTML = "<div><em>Waiting for scan...</em></div>";
 
+  // Start live camera QR scanning
   async function startCameraScan() {
     if (!("BarcodeDetector" in window)) {
       alert(
@@ -274,6 +290,7 @@ function bindScan() {
     }
   }
 
+  // Stop Scan camera stream and clear preview
   async function stopCamera() {
     scanning = false;
     if (mediaStream) {
@@ -285,6 +302,7 @@ function bindScan() {
   // expose globally so router can stop when leaving panel
   window.stopScanCamera = stopCamera;
 
+  // Decode QR from an uploaded image (fallback)
   async function decodeFromImage(file) {
     if (!("BarcodeDetector" in window)) {
       alert("QR decoding from image is not supported in this browser.");
@@ -395,27 +413,28 @@ function bindScan() {
   }
 }
 
+// Render scanned item card in Scan panel
 async function loadScannedItem(itemId, container) {
   try {
-    const it = ifoundDB.getItem(itemId);
-    if (!it) throw new Error("Item not found");
+    const item = ifoundDB.getItem(itemId);
+    if (!item) throw new Error("Item not found");
     const wrap = h("div", {}, [
       h("div", { style: "display:flex; gap:12px; align-items:flex-start" }, [
-        it.photoPath
+        item.photoPath
           ? h("img", {
-              src: assetUrl(it.photoPath),
+              src: assetUrl(item.photoPath),
               style: "max-width:160px;border-radius:6px",
             })
           : null,
         h("div", {}, [
-          h("div", { html: `<strong>${it.itemName}</strong>` }),
-          h("div", {}, `Owner: ${it.ownerName} (${it.contact || "n/a"})`),
-          h("div", {}, `Status: ${it.status}`),
-          it.lastClaimedAt
+          h("div", { html: `<strong>${item.itemName}</strong>` }),
+          h("div", {}, `Owner: ${item.ownerName} (${item.contact || "n/a"})`),
+          h("div", {}, `Status: ${item.status}`),
+          item.lastClaimedAt
             ? h(
                 "div",
                 { style: "font-size:12px;color:#6b7280" },
-                `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`
+                `Last claimed: ${new Date(item.lastClaimedAt).toLocaleString()}`
               )
             : null,
         ]),
@@ -445,15 +464,15 @@ function bindMyItems() {
         list.appendChild(h("div", {}, "No items found."));
         return;
       }
-      items.forEach((it) => {
+      items.forEach((item) => {
         list.appendChild(
           h("div", { class: "card", style: "margin-bottom:8px" }, [
             h("div", {
-              html: `<strong>${it.itemName}</strong> <span class="status-${it.status}">${it.status}</span>`,
+              html: `<strong>${item.itemName}</strong> <span class="status-${item.status}">${item.status}</span>`,
             }),
-            it.photoPath
+            item.photoPath
               ? h("img", {
-                  src: assetUrl(it.photoPath),
+                  src: assetUrl(item.photoPath),
                   style: "max-width:200px;margin-top:8px",
                 })
               : null,
@@ -461,7 +480,7 @@ function bindMyItems() {
               "div",
               { style: "margin-top:6px;font-size:12px;color:#6b7280" },
               `Category: ${categoryLabel(
-                it.category || inferCategoryFromName(it.itemName)
+                item.category || inferCategoryFromName(item.itemName)
               )}`
             ),
             h(
@@ -471,7 +490,7 @@ function bindMyItems() {
               },
               [
                 h("img", {
-                  src: ifoundDB.qrUrlFor(it.id),
+                  src: ifoundDB.qrUrlFor(item.id),
                   alt: "QR",
                   style:
                     "width:120px;height:120px;background:#fff;padding:6px;border-radius:8px",
@@ -483,7 +502,7 @@ function bindMyItems() {
                     class: "btn",
                     onclick: (e) => {
                       e.preventDefault();
-                      downloadQr(it.id);
+                      downloadQr(item.id);
                     },
                   },
                   "Download QR"
@@ -515,37 +534,39 @@ async function loadLostItems() {
       document.getElementById("categoryFilter").value || "all"
     ).toLowerCase();
     items
-      .filter((it) => {
-        const hit = `${it.itemName} ${it.ownerName}`
+      .filter((item) => {
+        const hit = `${item.itemName} ${item.ownerName}`
           .toLowerCase()
           .includes(search);
-        const itemCat = it.category || inferCategoryFromName(it.itemName);
+        const itemCat = item.category || inferCategoryFromName(item.itemName);
         const inCat = cat === "all" || itemCat === cat;
         return hit && inCat;
       })
-      .forEach((it) => {
-        const primaryPhoto = it.foundPhotoPath || it.photoPath;
+      .forEach((item) => {
+        const primaryPhoto = item.foundPhotoPath || item.photoPath;
         const secondaryPhoto =
-          it.foundPhotoPath && it.photoPath ? it.photoPath : null;
+          item.foundPhotoPath && item.photoPath ? item.photoPath : null;
         const card = h("div", { class: "item card" }, [
           primaryPhoto
-            ? h("img", { src: assetUrl(primaryPhoto), alt: it.itemName })
+            ? h("img", { src: assetUrl(primaryPhoto), alt: item.itemName })
             : null,
           h("div", { class: "meta" }, [
-            h("strong", {}, it.itemName),
-            h("div", {}, `Owner: ${it.ownerName}`),
+            h("strong", {}, item.itemName),
+            h("div", {}, `Owner: ${item.ownerName}`),
             h(
               "div",
               { style: "margin-top:4px;color:#6b7280;font-size:12px" },
               `Category: ${categoryLabel(
-                it.category || inferCategoryFromName(it.itemName)
+                item.category || inferCategoryFromName(item.itemName)
               )}`
             ),
-            it.lastClaimedAt
+            item.lastClaimedAt
               ? h(
                   "div",
                   { style: "margin-top:4px;color:#6b7280;font-size:12px" },
-                  `Last claimed: ${new Date(it.lastClaimedAt).toLocaleString()}`
+                  `Last claimed: ${new Date(
+                    item.lastClaimedAt
+                  ).toLocaleString()}`
                 )
               : null,
             secondaryPhoto
@@ -566,7 +587,7 @@ async function loadLostItems() {
                     const sid = prompt("Enter owner's Student ID to claim:");
                     if (!sid) return;
                     const sameId =
-                      (sid || "").trim() === (it.studentId || "").trim();
+                      (sid || "").trim() === (item.studentId || "").trim();
                     if (!sameId) {
                       alert(
                         "Student ID does not match the registered owner. Cannot claim."
@@ -574,8 +595,8 @@ async function loadLostItems() {
                       return;
                     }
                     const r = ifoundDB.addClaim({
-                      itemId: it.id,
-                      claimantName: it.ownerName || "Owner",
+                      itemId: item.id,
+                      claimantName: item.ownerName || "Owner",
                     });
                     if (r) {
                       alert("Claim submitted.");

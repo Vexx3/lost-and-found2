@@ -1,3 +1,13 @@
+/*
+  Admin dashboard logic (localStorage only)
+  - Pending Found Reports: verify to move items into Lost Items
+  - Claims: list submitted claims
+  - Analytics: simple counts and recovery rate
+  - Data controls: export/import JSON snapshot
+
+  Depends on utils.js (h, assetUrl) and localdb.js (ifoundDB).
+*/
+
 document.addEventListener("DOMContentLoaded", () => {
   loadPending();
   loadClaims();
@@ -5,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindDataControls();
 });
 
+// Render the list of pending found reports and wire Verify actions
 async function loadPending() {
   const container = document.getElementById("reports");
   if (!container) return;
@@ -15,11 +26,11 @@ async function loadPending() {
       container.appendChild(h("div", { class: "card" }, "No pending reports."));
       return;
     }
-    reports.forEach((r) => {
+    reports.forEach((report) => {
       const card = h("div", { class: "card", style: "margin-bottom:8px" }, [
-        h("strong", {}, r.itemName),
-        h("div", {}, `Finder: ${r.finderName}`),
-        h("div", {}, `Location: ${r.location}`),
+        h("strong", {}, report.itemName),
+        h("div", {}, `Finder: ${report.finderName}`),
+        h("div", {}, `Location: ${report.location}`),
         h(
           "div",
           {
@@ -27,7 +38,7 @@ async function loadPending() {
               "display:flex; gap:12px; margin-top:8px; align-items:flex-start",
           },
           [
-            r.photoPath
+            report.photoPath
               ? h("div", {}, [
                   h(
                     "div",
@@ -35,12 +46,12 @@ async function loadPending() {
                     "Finder Photo"
                   ),
                   h("img", {
-                    src: assetUrl(r.photoPath),
+                    src: assetUrl(report.photoPath),
                     style: "max-width:200px;border-radius:6px;margin-top:4px",
                   }),
                 ])
               : null,
-            r.itemPhoto
+            report.itemPhoto
               ? h("div", {}, [
                   h(
                     "div",
@@ -48,7 +59,7 @@ async function loadPending() {
                     "Owner Photo"
                   ),
                   h("img", {
-                    src: assetUrl(r.itemPhoto),
+                    src: assetUrl(report.itemPhoto),
                     style: "max-width:200px;border-radius:6px;margin-top:4px",
                   }),
                 ])
@@ -62,7 +73,6 @@ async function loadPending() {
               type: "button",
               class: "btn primary",
               onclick: async (ev) => {
-                console.log("Verifying report id", r.id);
                 const ok = confirm("Verify and move to Lost Items?");
                 if (!ok) return;
                 const btn = ev.currentTarget;
@@ -70,7 +80,7 @@ async function loadPending() {
                 const prev = btn.textContent;
                 btn.textContent = "Verifying...";
                 try {
-                  const ok2 = ifoundDB.verifyReportMoveToLost(r.id);
+                  const ok2 = ifoundDB.verifyReportMoveToLost(report.id);
                   if (ok2) {
                     // Immediate visual feedback
                     card.innerHTML = "";
@@ -109,6 +119,7 @@ async function loadPending() {
   }
 }
 
+// Render the list of claims with timestamps
 async function loadClaims() {
   const container = document.getElementById("claims");
   if (!container) return;
@@ -119,16 +130,16 @@ async function loadClaims() {
       container.appendChild(h("div", { class: "card" }, "No claims yet."));
       return;
     }
-    claims.forEach((c) => {
+    claims.forEach((claim) => {
       container.appendChild(
         h("div", { class: "card", style: "margin-bottom:8px" }, [
-          h("strong", {}, `Claim: ${c.itemName}`),
-          h("div", {}, `Claimant: ${c.claimantName}`),
-          h("div", {}, `Student ID: ${c.studentId}`),
+          h("strong", {}, `Claim: ${claim.itemName}`),
+          h("div", {}, `Claimant: ${claim.claimantName}`),
+          h("div", {}, `Student ID: ${claim.studentId}`),
           h(
             "div",
             { style: "font-size:12px;color:#6b7280" },
-            `On: ${new Date(c.createdAt).toLocaleString()}`
+            `On: ${new Date(claim.createdAt).toLocaleString()}`
           ),
         ])
       );
@@ -138,6 +149,7 @@ async function loadClaims() {
   }
 }
 
+// Render a small analytics summary
 async function loadAnalytics() {
   const container = document.getElementById("analytics");
   if (!container) return;
@@ -154,6 +166,7 @@ async function loadAnalytics() {
   }
 }
 
+// Wire export/import buttons for local data management
 function bindDataControls() {
   const exportBtn = document.getElementById("exportData");
   const importInput = document.getElementById("importFile");
