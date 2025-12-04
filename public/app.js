@@ -304,26 +304,66 @@ function bindScan() {
 
   // Decode QR from an uploaded image (fallback)
   async function decodeFromImage(file) {
-    if (!("BarcodeDetector" in window)) {
-      alert("QR decoding from image is not supported in this browser.");
-      return;
-    }
     const url = URL.createObjectURL(file);
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = async () => {
       try {
-        const detector = new BarcodeDetector({ formats: ["qr_code"] });
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        const codes = await detector.detect(canvas);
-        if (codes && codes.length) {
-          scannedItemId = (codes[0].rawValue || "").trim();
-          loadScannedItem(scannedItemId, resultCard);
-        } else {
-          alert("No QR found in the image.");
+
+        // Prefer native BarcodeDetector when available
+        if ("BarcodeDetector" in window) {
+          try {
+            const detector = new BarcodeDetector({ formats: ["qr_code"] });
+            const codes = await detector.detect(canvas);
+            if (codes && codes.length) {
+              scannedItemId = (codes[0].rawValue || "").trim();
+              loadScannedItem(scannedItemId, resultCard);
+              return;
+            }
+            alert("No QR found in the image.");
+            return;
+          } catch (e) {
+            console.warn("BarcodeDetector failed on canvas, falling back:", e);
+            // fall through to JS fallback
+          }
+        }
+
+        // Fallback: try to load jsQR if available (dynamic load from CDN)
+        if (typeof jsQR === "undefined") {
+          try {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement("script");
+              s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+              s.onload = () => resolve();
+              s.onerror = () => reject(new Error("Failed to load jsQR"));
+              document.head.appendChild(s);
+            });
+          } catch (e) {
+            console.error("Failed to load jsQR fallback", e);
+            alert(
+              "QR decoding from image is not supported in this browser and the fallback failed. Try Chrome/Edge or use the camera."
+            );
+            return;
+          }
+        }
+
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          if (code && code.data) {
+            scannedItemId = (code.data || "").trim();
+            loadScannedItem(scannedItemId, resultCard);
+          } else {
+            alert("No QR found in the image.");
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Failed to decode the image.");
         }
       } catch (e) {
         console.error(e);
@@ -592,13 +632,14 @@ async function loadLostItems() {
                 {
                   class: "btn",
                   onclick: async () => {
-                    const sid = prompt("Enter owner's Student ID to claim:");
-                    if (!sid) return;
-                    const sameId =
-                      (sid || "").trim() === (item.studentId || "").trim();
-                    if (!sameId) {
+                    const email = prompt("Enter owner's email to claim:");
+                    if (!email) return;
+                    const sameEmail =
+                      (email || "").trim().toLowerCase() ===
+                      ((item.email || "").trim().toLowerCase());
+                    if (!sameEmail) {
                       alert(
-                        "Student ID does not match the registered owner. Cannot claim."
+                        "Email does not match the registered owner. Cannot claim."
                       );
                       return;
                     }
