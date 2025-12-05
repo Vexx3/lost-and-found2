@@ -239,17 +239,42 @@ function bindScan() {
   const foundPhotoInput = document.getElementById("foundPhoto");
   const foundPreview = document.getElementById("foundPreview");
 
+  // Helper to load jsQR preferring a local copy then falling back to CDN
+  async function ensureJsQR() {
+    if (typeof jsQR !== "undefined") return;
+    // Try local vendor first
+    const localPath = "public/libs/jsQR.js";
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = localPath;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("local jsQR not found"));
+        document.head.appendChild(s);
+      });
+      if (typeof jsQR !== "undefined") return;
+    } catch (e) {
+      // fall through to CDN
+    }
+    // CDN fallback
+    const cdn = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = cdn;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("Failed to load jsQR from CDN"));
+      document.head.appendChild(s);
+    });
+  }
+
   if (resultCard)
     resultCard.innerHTML = "<div><em>Waiting for scan...</em></div>";
 
-  // Start live camera QR scanning
+  // Start live camera QR scanning. Uses BarcodeDetector when available,
+  // otherwise falls back to jsQR by reading video frames into a canvas.
+  let scanRaf = null;
+  let scanVideoEl = null;
   async function startCameraScan() {
-    if (!("BarcodeDetector" in window)) {
-      alert(
-        "QR scanning is not supported in this browser. Try Chrome/Edge or use the image upload."
-      );
-      return;
-    }
     try {
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
@@ -266,22 +291,86 @@ function bindScan() {
       video.srcObject = mediaStream;
       await video.play();
 
-      const detector = new BarcodeDetector({ formats: ["qr_code"] });
+      scanVideoEl = video;
       scanning = true;
-      const tick = async () => {
-        if (!scanning) return;
+
+      // If native BarcodeDetector exists, prefer it
+      if ("BarcodeDetector" in window) {
         try {
-          const codes = await detector.detect(video);
-          if (codes && codes.length) {
-            scannedItemId = (codes[0].rawValue || "").trim();
-            await stopCamera();
-            loadScannedItem(scannedItemId, resultCard);
-            return;
+          const detector = new BarcodeDetector({ formats: ["qr_code"] });
+          const tick = async () => {
+            if (!scanning) return;
+            try {
+              const codes = await detector.detect(video);
+              if (codes && codes.length) {
+                scannedItemId = (codes[0].rawValue || "").trim();
+                await stopCamera();
+                loadScannedItem(scannedItemId, resultCard);
+                return;
+              }
+            } catch (e) {
+              // fallthrough to jsQR fallback below
+              console.warn("BarcodeDetector error, falling back to jsQR", e);
+              // Stop using detector path
+              // start jsQR loop by calling its tick once
+              return startCameraScan();
+            }
+            scanRaf = requestAnimationFrame(tick);
+          };
+          scanRaf = requestAnimationFrame(tick);
+          return;
+        } catch (e) {
+          console.warn("BarcodeDetector init failed, falling back:", e);
+        }
+      }
+
+      // Ensure jsQR is available for fallback
+      try {
+        await ensureJsQR();
+      } catch (e) {
+        console.error("Failed to load jsQR fallback", e);
+        alert(
+          "QR scanning is not supported in this browser and the fallback failed. Use the image upload or try another browser."
+        );
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const tickFallback = () => {
+        if (!scanning || !scanVideoEl) return;
+        try {
+          const w = scanVideoEl.videoWidth || 320;
+          const h = scanVideoEl.videoHeight || 240;
+          if (w && h) {
+            canvas.width = w;
+            canvas.height = h;
+            // draw mirrored frame to match preview
+            ctx.save();
+            ctx.translate(w, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(scanVideoEl, 0, 0, w, h);
+            ctx.restore();
+            try {
+              const imageData = ctx.getImageData(0, 0, w, h);
+              const code = jsQR(imageData.data, imageData.width, imageData.height);
+              if (code && code.data) {
+                scannedItemId = (code.data || "").trim();
+                stopCamera();
+                loadScannedItem(scannedItemId, resultCard);
+                return;
+              }
+            } catch (err) {
+              // getImageData may throw on some cross-origin contexts; ignore
+              console.warn("Frame decode failed:", err);
+            }
           }
-        } catch (e) {}
-        requestAnimationFrame(tick);
+        } catch (err) {
+          console.error("Scan loop error", err);
+        }
+        scanRaf = requestAnimationFrame(tickFallback);
       };
-      requestAnimationFrame(tick);
+      scanRaf = requestAnimationFrame(tickFallback);
     } catch (e) {
       console.error(e);
       alert(
@@ -293,6 +382,17 @@ function bindScan() {
   // Stop Scan camera stream and clear preview
   async function stopCamera() {
     scanning = false;
+    if (scanRaf) {
+      cancelAnimationFrame(scanRaf);
+      scanRaf = null;
+    }
+    if (scanVideoEl) {
+      try {
+        scanVideoEl.pause();
+        scanVideoEl.srcObject = null;
+      } catch (e) {}
+      scanVideoEl = null;
+    }
     if (mediaStream) {
       mediaStream.getTracks().forEach((t) => t.stop());
       mediaStream = null;
@@ -628,33 +728,16 @@ async function loadLostItems() {
               : null,
             h("div", { style: "margin-top:8px" }, [
               h(
-                "button",
-                {
-                  class: "btn",
-                  onclick: async () => {
-                    const email = prompt("Enter owner's email to claim:");
-                    if (!email) return;
-                    const sameEmail =
-                      (email || "").trim().toLowerCase() ===
-                      ((item.email || "").trim().toLowerCase());
-                    if (!sameEmail) {
-                      alert(
-                        "Email does not match the registered owner. Cannot claim."
-                      );
-                      return;
-                    }
-                    const r = ifoundDB.addClaim({
-                      itemId: item.id,
-                      claimantName: item.ownerName || "Owner",
-                    });
-                    if (r) {
-                      alert("Claim submitted.");
-                      loadLostItems();
-                    } else alert("Failed to claim");
+                  "button",
+                  {
+                    class: "btn",
+                    onclick: async () => {
+                      // Show the claim modal and populate with item info
+                      showClaimModal(item);
+                    },
                   },
-                },
-                "Claim"
-              ),
+                  "Claim"
+                ),
             ]),
           ]),
         ]);
@@ -672,4 +755,57 @@ document.addEventListener("DOMContentLoaded", () => {
   const cat = document.getElementById("categoryFilter");
   if (search) search.addEventListener("input", loadLostItems);
   if (cat) cat.addEventListener("change", loadLostItems);
+  // Claim modal handlers
+  const claimModal = document.getElementById("claimModal");
+  const claimForm = document.getElementById("claimForm");
+  const claimCancel = document.getElementById("claimCancel");
+  const claimCancelSecondary = document.getElementById("claimCancelSecondary");
+  if (claimCancel) claimCancel.addEventListener("click", closeClaimModal);
+  if (claimCancelSecondary) claimCancelSecondary.addEventListener("click", closeClaimModal);
+  if (claimForm)
+    claimForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const itemId = document.getElementById("claimItemId").value;
+      const email = document.getElementById("claimEmail").value.trim().toLowerCase();
+      const photoFile = document.getElementById("claimIdPhoto").files[0];
+      if (!itemId) return closeClaimModal();
+      const item = ifoundDB.getItem(itemId);
+      if (!item) return alert("Item not found");
+      if ((item.email || "").trim().toLowerCase() !== email) {
+        return alert("Email does not match the registered owner. Cannot claim.");
+      }
+      try {
+        let proofDataUrl = null;
+        if (photoFile) proofDataUrl = await fileToDataUrl(photoFile, 800);
+        const r = ifoundDB.addClaim({
+          itemId: item.id,
+          claimantName: item.ownerName || "Owner",
+          proofPhoto: proofDataUrl,
+        });
+        if (r) {
+          alert("Claim submitted.");
+          closeClaimModal();
+          loadLostItems();
+        } else alert("Failed to claim");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to submit claim.");
+      }
+    });
 });
+
+// Claim modal helpers (global functions used by UI)
+function showClaimModal(item) {
+  const modal = document.getElementById("claimModal");
+  if (!modal) return;
+  document.getElementById("claimItemId").value = item.id || "";
+  // Do NOT prefill the owner's email; claimant must enter owner's email to verify.
+  document.getElementById("claimEmail").value = "";
+  document.getElementById("claimIdPhoto").value = "";
+  modal.style.display = "flex";
+}
+function closeClaimModal() {
+  const modal = document.getElementById("claimModal");
+  if (!modal) return;
+  modal.style.display = "none";
+}

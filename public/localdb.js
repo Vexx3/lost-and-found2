@@ -163,8 +163,8 @@
     return true;
   }
 
-  function addClaim({ itemId, claimantName }) {
-    // Mark item as claimed and create a claim record
+  function addClaim({ itemId, claimantName, proofPhoto = null }) {
+    // Mark item as claimed and create a claim record; optional proof photo
     const db = load();
     const item = db.items.find((x) => x.id === itemId);
     if (!item) return null;
@@ -173,6 +173,7 @@
       id: db.seq.claims,
       itemId,
       claimantName,
+      proofPhoto: proofPhoto || null,
       createdAt: nowIso(),
     };
     db.claims.push(claim);

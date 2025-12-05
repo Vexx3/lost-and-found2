@@ -5,7 +5,7 @@ A simple, fully client-side Lost & Found app that runs from static files. No ser
 ## Features
 
 - Register item: attach an item photo, save owner details, and generate a unique QR.
-- Scan QR: use your camera (BarcodeDetector) or upload an image of the QR to view item info; submit a Found Report.
+ - Scan QR: use your camera (BarcodeDetector) or upload an image of the QR to view item info; submit a Found Report. The app now also falls back to a JavaScript-based decoder (jsQR) for browsers that don't support BarcodeDetector.
 - My Registered Items: list items by Student ID and download their QR code directly.
 - Lost Items: shows verified found items; Claim flow checks student ID + owner name.
 - Admin Dashboard: verify pending found reports (moves to Lost Items), see claims, analytics, and import/export JSON.
@@ -23,7 +23,8 @@ Tip: Use a simple static server (e.g., VS Code Live Server) for best camera perm
 
 - Data is saved in localStorage under the key `ifound_store_v1`.
 - QR images are fetched from a public QR service when viewed, and downloaded directly as PNG when you click Download.
-- Camera scanning uses the native `BarcodeDetector` API; if your browser doesn’t support it, use the “upload image” option.
+ - Camera scanning uses the native `BarcodeDetector` API when available. If it's not available the app dynamically loads `jsQR` and attempts to decode QR codes by scanning video frames or decoding uploaded images. Note: the jsQR fallback requires network access to load the library from a CDN unless you vendor it locally (I can add a local copy if you prefer offline support).
+ - Camera scanning uses the native `BarcodeDetector` API when available. If it's not available the app dynamically loads `jsQR` and attempts to decode QR codes by scanning video frames or decoding uploaded images. The app prefers a vendored local copy at `public/libs/jsQR.js` if present, otherwise it loads from CDN. I added a small QR test page at `public/qr-test.html` to generate QR images for manual testing.
 - On Verify, if the finder included a photo, that image is used on the Lost Items list (owner photo is kept as a secondary reference).
 
 ## Project structure

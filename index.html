@@ -248,5 +248,30 @@
     <footer>
       <small>ifound — STI College Muñoz-EDSA</small>
     </footer>
+    <!-- Claim modal -->
+    <div id="claimModal" class="modal" style="display:none;">
+      <div class="modal-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);"></div>
+      <div class="modal-card" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;padding:18px;border-radius:10px;max-width:480px;width:90%;box-shadow:0 12px 36px rgba(0,0,0,0.25);z-index:10000">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <h3 style="margin:0">Claim Item</h3>
+          <button id="claimCancel" class="btn" style="background:transparent;border:none;font-size:18px;line-height:1;">✕</button>
+        </div>
+        <form id="claimForm">
+          <input type="hidden" id="claimItemId" />
+          <div style="margin-bottom:10px">
+            <label for="claimEmail" style="display:block;margin-bottom:6px;font-weight:600">Owner's Email</label>
+            <input id="claimEmail" type="email" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #d1d5db" autocomplete="email" />
+          </div>
+          <div style="margin-bottom:10px">
+            <label for="claimIdPhoto" style="display:block;margin-bottom:6px;font-weight:600">ID Proof (optional)</label>
+            <input id="claimIdPhoto" type="file" accept="image/*" />
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" id="claimCancelSecondary" class="btn secondary">Cancel</button>
+            <button type="submit" class="btn primary">Submit Claim</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </body>
 </html>
