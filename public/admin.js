@@ -30,7 +30,46 @@ function showToast(message, type = "info") {
   }, 3500);
 }
 
+// Default admin PIN — change this for a real deployment
+const ADMIN_PIN = "1234";
+
 document.addEventListener("DOMContentLoaded", () => {
+  const gate = document.getElementById("pinGate");
+  const pinInput = document.getElementById("pinInput");
+  const pinSubmit = document.getElementById("pinSubmit");
+  const pinError = document.getElementById("pinError");
+  const content = document.getElementById("adminContent");
+
+  // Check if already authenticated this session
+  if (sessionStorage.getItem("ifound_admin_auth") === "1") {
+    gate.style.display = "none";
+    initAdmin();
+    return;
+  }
+
+  // Hide admin content until PIN is verified
+  if (content) content.style.visibility = "hidden";
+
+  function tryUnlock() {
+    if ((pinInput.value || "") === ADMIN_PIN) {
+      sessionStorage.setItem("ifound_admin_auth", "1");
+      gate.style.display = "none";
+      if (content) content.style.visibility = "visible";
+      initAdmin();
+    } else {
+      pinError.textContent = "Incorrect PIN. Please try again.";
+      pinInput.value = "";
+      pinInput.focus();
+    }
+  }
+
+  if (pinSubmit) pinSubmit.addEventListener("click", tryUnlock);
+  if (pinInput) pinInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryUnlock();
+  });
+});
+
+function initAdmin() {
   // Auto-archive silently on every page load (1-year default policy)
   try {
     const n = ifoundDB.archiveExpiredItems(365);
@@ -42,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadRetentionPolicy();
   bindDataControls();
-});
+}
 
 // Render the list of pending found reports and wire Verify actions
 async function loadPending() {

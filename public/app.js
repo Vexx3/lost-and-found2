@@ -771,7 +771,7 @@ async function loadScannedItem(itemId, container) {
           : null,
         h("div", {}, [
           h("strong", {}, item.itemName),
-          h("div", {}, `Owner: ${item.ownerName}`),
+          h("div", {}, `Owner: ${maskName(item.ownerName)}`),
           h("span", { class: "status-" + item.status }, item.status),
         ]),
       ]),
@@ -894,7 +894,7 @@ async function loadLostItems() {
     ).toLowerCase();
     items
       .filter((item) => {
-        const hit = `${item.itemName} ${item.ownerName}`
+        const hit = (item.itemName || "")
           .toLowerCase()
           .includes(search);
         const itemCat = item.category || inferCategoryFromName(item.itemName);
@@ -911,7 +911,7 @@ async function loadLostItems() {
             : null,
           h("div", { class: "meta" }, [
             h("strong", {}, item.itemName),
-            h("div", {}, `Owner: ${item.ownerName}`),
+            h("div", {}, `Owner: ${maskName(item.ownerName)}`),
             h(
               "div",
               { style: "margin-top:4px;color:#6b7280;font-size:12px" },
@@ -919,15 +919,6 @@ async function loadLostItems() {
                 item.category || inferCategoryFromName(item.itemName)
               )}`
             ),
-            item.lastClaimedAt
-              ? h(
-                "div",
-                { style: "margin-top:4px;color:#6b7280;font-size:12px" },
-                `Last claimed: ${new Date(
-                  item.lastClaimedAt
-                ).toLocaleString()}`
-              )
-              : null,
             secondaryPhoto
               ? h("div", { style: "margin-top:8px" }, [
                 h("img", {

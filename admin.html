@@ -12,6 +12,17 @@
 </head>
 
 <body>
+  <!-- Admin PIN gate — hides all content until correct PIN is entered -->
+  <div id="pinGate" style="position:fixed;inset:0;background:#f7fbff;z-index:99999;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:32px 28px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.14);max-width:340px;width:90%;text-align:center">
+      <div style="font-size:22px;font-weight:700;margin-bottom:6px;">&#128274; Admin Access</div>
+      <p style="color:#6b7280;font-size:14px;margin:0 0 18px">Enter the admin PIN to continue.</p>
+      <input id="pinInput" type="password" placeholder="Enter PIN" maxlength="12"
+        style="width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;font-size:18px;letter-spacing:4px;text-align:center;margin-bottom:10px;" />
+      <div id="pinError" style="color:#dc2626;font-size:13px;min-height:18px;margin-bottom:8px;"></div>
+      <button id="pinSubmit" class="btn primary" style="width:100%;">Unlock</button>
+    </div>
+  </div>
   <header class="topbar">
     <div class="brand">ifound</div>
     <button class="hamburger" id="menuToggle" aria-label="Toggle menu">&#9776;</button>

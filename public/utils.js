@@ -37,6 +37,17 @@ function assetUrl(p) {
   return p;
 }
 
+// Privacy helper — mask a full name to "First L." (e.g. "Juan D.")
+// Used on all public-facing pages so full names are not exposed.
+function maskName(fullName) {
+  if (!fullName || typeof fullName !== "string") return "Unknown";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]; // single name, no masking needed
+  const first = parts[0];
+  const lastInitial = parts[parts.length - 1][0].toUpperCase();
+  return `${first} ${lastInitial}.`;
+}
+
 // Category helpers
 function categoryLabel(key) {
   const map = {
