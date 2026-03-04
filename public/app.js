@@ -771,7 +771,7 @@ async function loadScannedItem(itemId, container) {
           : null,
         h("div", {}, [
           h("strong", {}, item.itemName),
-          h("div", {}, `Owner: ${item.ownerName} (${item.contact || "n/a"})`),
+          h("div", {}, `Owner: ${item.ownerName}`),
           h("span", { class: "status-" + item.status }, item.status),
         ]),
       ]),
