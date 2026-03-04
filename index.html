@@ -85,7 +85,7 @@
             <div id="foundQuickActions" style="display:flex;flex-direction:column;gap:8px;">
               <input type="file" id="foundPhoto" accept="image/*" />
               <div style="display:flex;gap:8px;">
-                <button type="button" id="foundOpenCam" class="btn">Use Camera</button>
+                <button type="button" id="foundOpenCam" class="btn secondary">Use Camera</button>
                 <button type="button" id="foundClearPhoto" class="btn secondary">Clear</button>
               </div>
             </div>
@@ -123,7 +123,7 @@
           <option value="tumblers">Tumbler</option>
           <option value="other">Other</option>
         </select>
-        <label>Item Picture</label>
+        <label>Item Picture <span style="color:#ef4444">*</span></label>
         <input id="itemPhoto" type="file" accept="image/*" capture="environment" />
         <div id="regPreviewWrap" style="
               margin-top: 8px;
@@ -150,7 +150,7 @@
             <div id="regVideoWrap" class="video-wrap"></div>
           </div>
           <div id="regQuickActions" style="display: flex; gap: 8px">
-            <button type="button" id="regOpenCam" class="btn">
+            <button type="button" id="regOpenCam" class="btn secondary">
               Use Camera
             </button>
             <button type="button" id="regClearPhoto" class="btn secondary">

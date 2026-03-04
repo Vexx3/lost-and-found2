@@ -31,9 +31,16 @@ function showToast(message, type = "info") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Auto-archive silently on every page load (1-year default policy)
+  try {
+    const n = ifoundDB.archiveExpiredItems(365);
+    if (n > 0) console.info(`[ifound] Auto-archived ${n} stale item(s).`);
+  } catch (e) { /* silent fail */ }
+
   loadPending();
   loadClaims();
   loadAnalytics();
+  loadRetentionPolicy();
   bindDataControls();
 });
 
@@ -179,13 +186,61 @@ async function loadAnalytics() {
     const a = ifoundDB.analytics();
     container.innerHTML = "";
     container.appendChild(h("div", {}, `Total items: ${a.total}`));
-    container.appendChild(h("div", {}, `Lost: ${a.lost}`));
+    container.appendChild(h("div", {}, `Lost (unclaimed): ${a.lost}`));
     container.appendChild(h("div", {}, `Claimed: ${a.claimed}`));
+    container.appendChild(h("div", {}, `Archived (expired): ${a.archived}`));
     container.appendChild(h("div", {}, `Pending reports: ${a.pendingReports}`));
     container.appendChild(h("div", {}, `Recovery rate: ${a.recoveryRate}%`));
   } catch (e) {
     console.error(e);
   }
+}
+
+// Retention policy — manual archive trigger and archived items list
+function loadRetentionPolicy() {
+  const list = document.getElementById("archivedList");
+  const btn = document.getElementById("archiveNowBtn");
+  const select = document.getElementById("retentionDays");
+  if (!list || !btn || !select) return;
+
+  function renderArchivedList() {
+    list.innerHTML = "";
+    const items = ifoundDB.listArchivedItems();
+    if (!items.length) {
+      list.appendChild(
+        h("p", { style: "color:#6b7280;font-size:14px;margin-top:8px" },
+          "No archived items yet.")
+      );
+      return;
+    }
+    items.forEach((item) => {
+      list.appendChild(
+        h("div", { class: "card", style: "margin-top:8px" }, [
+          h("strong", {}, item.itemName),
+          h("span", { class: "status-archived", style: "margin-left:8px" }, "Archived"),
+          h("div", {}, `Owner: ${item.ownerName} (${item.studentId})`),
+          h("div", { style: "font-size:12px;color:#6b7280" },
+            `Lost since: ${new Date(item.lostSince || item.createdAt).toLocaleDateString()}`),
+          h("div", { style: "font-size:12px;color:#6b7280" },
+            `Archived on: ${new Date(item.archivedAt).toLocaleDateString()}`),
+        ])
+      );
+    });
+  }
+
+  btn.addEventListener("click", () => {
+    const days = parseInt(select.value, 10);
+    const count = ifoundDB.archiveExpiredItems(days);
+    if (count > 0) {
+      showToast(`${count} item(s) archived as expired.`, "success");
+      loadAnalytics();
+    } else {
+      showToast("No items met the retention threshold.", "info");
+    }
+    renderArchivedList();
+  });
+
+  renderArchivedList();
 }
 
 // Wire export/import buttons for local data management

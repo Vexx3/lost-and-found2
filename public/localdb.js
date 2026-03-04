@@ -158,12 +158,41 @@
     if (!item) return false;
     report.status = "verified";
     item.status = "lost";
+    item.lostSince = nowIso(); // timestamp when item became lost, used for retention
     // If finder provided a photo, prefer it for lost listing, but keep owner photo as fallback
     if (report.photoPath) {
       item.foundPhotoPath = report.photoPath;
     }
     save(db);
     return true;
+  }
+
+  // Archive items that have been lost (unclaimed) for longer than `days` days.
+  // Returns the count of newly archived items.
+  function archiveExpiredItems(days) {
+    const db = load();
+    const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
+    let count = 0;
+    for (const item of db.items) {
+      if (item.status !== "lost") continue;
+      // Skip items without a lostSince timestamp — they may have just been verified
+      if (!item.lostSince) continue;
+      const since = new Date(item.lostSince).getTime();
+      if (since < cutoffMs) {
+        item.status = "archived";
+        item.archivedAt = nowIso();
+        count++;
+      }
+    }
+    if (count > 0) save(db);
+    return count;
+  }
+
+  function listArchivedItems() {
+    const db = load();
+    return db.items
+      .filter((item) => item.status === "archived")
+      .sort((a, b) => (a.archivedAt < b.archivedAt ? 1 : -1));
   }
 
   function addClaim({ itemId, claimantName }) {
@@ -205,11 +234,12 @@
     const total = db.items.length;
     const claimed = db.items.filter((i) => i.status === "claimed").length;
     const lost = db.items.filter((i) => i.status === "lost").length;
+    const archived = db.items.filter((i) => i.status === "archived").length;
     const pendingReports = db.found_reports.filter(
       (r) => r.status === "pending"
     ).length;
     const recoveryRate = total ? Math.round((claimed / total) * 100) : 0;
-    return { total, claimed, lost, pendingReports, recoveryRate };
+    return { total, claimed, lost, archived, pendingReports, recoveryRate };
   }
 
   function exportAll() {
@@ -251,6 +281,8 @@
     verifyReportMoveToLost,
     addClaim,
     listClaimsWithItem,
+    archiveExpiredItems,
+    listArchivedItems,
     analytics,
     exportAll,
     importMerge,

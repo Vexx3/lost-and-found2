@@ -455,7 +455,7 @@ function bindScan() {
   }
 
   if (resultCard)
-    resultCard.innerHTML = "<div><em>Waiting for scan...</em></div>";
+    resultCard.innerHTML = "<em style='color:#6b7280'>Waiting for QR scan&hellip;</em>";
 
   // Start live camera QR scanning. Uses BarcodeDetector when available,
   // otherwise falls back to jsQR by reading video frames into a canvas.
@@ -742,6 +742,22 @@ async function loadScannedItem(itemId, container) {
   try {
     const item = ifoundDB.getItem(itemId);
     if (!item) throw new Error("Item not found");
+
+    // Block found-form for items that are already claimed or archived
+    if (item.status === "claimed" || item.status === "archived") {
+      hideFoundForm();
+      const msg =
+        item.status === "claimed"
+          ? "This item has already been claimed by its owner."
+          : "This item has been archived (expired). Please contact the admin.";
+      container.innerHTML = "";
+      container.appendChild(
+        h("div", { style: "color:#991b1b;background:rgba(239,68,68,0.08);padding:12px;border-radius:8px;" }, msg)
+      );
+      return;
+    }
+
+    // For registered or lost items — show info and open found form
     const wrap = h("div", {}, [
       h("div", { style: "display:flex; gap:12px; align-items:flex-start" }, [
         item.photoPath
@@ -753,23 +769,18 @@ async function loadScannedItem(itemId, container) {
         h("div", {}, [
           h("strong", {}, item.itemName),
           h("div", {}, `Owner: ${item.ownerName} (${item.contact || "n/a"})`),
-          h("div", {}, `Status: ${item.status}`),
-          item.lastClaimedAt
-            ? h(
-              "div",
-              { style: "font-size:12px;color:#6b7280" },
-              `Last claimed: ${new Date(item.lastClaimedAt).toLocaleString()}`
-            )
-            : null,
+          h("span", { class: "status-" + item.status }, item.status),
         ]),
       ]),
     ]);
     container.innerHTML = "";
     container.appendChild(wrap);
   } catch (e) {
+    hideFoundForm();
     container.innerHTML = "";
     container.appendChild(
-      h("div", { class: "toast-error" }, "Item not found in the database. It may not be registered yet.")
+      h("div", { style: "color:#991b1b;background:rgba(239,68,68,0.08);padding:12px;border-radius:8px;" },
+        "Item not found in the database. Make sure the QR code is registered.")
     );
   }
 }

@@ -70,11 +70,6 @@ main {
   display: block;
 }
 
-/* show panels when fragment/hash targets them */
-.panel:target {
-  display: block;
-}
-
 /* Typography helpers */
 .lead {
   color: var(--muted);
@@ -311,6 +306,16 @@ input[type="file"] {
 .status-lost {
   background: rgba(239, 68, 68, 0.10);
   color: #991b1b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-archived {
+  background: #f3f4f6;
+  color: #6b7280;
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
