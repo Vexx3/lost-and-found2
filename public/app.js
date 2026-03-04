@@ -129,15 +129,17 @@ function bindRegister() {
       if (regMediaStream) return; // already started
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
-      video.style.width = "100%";
-      video.style.height = "100%";
-      video.style.objectFit = "cover";
-      video.style.transform = "scaleX(-1)";
+      video.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)";
       videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
-      regMediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
+      // Try back camera first; fall back to any camera (needed on desktop/DevTools)
+      try {
+        regMediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+        });
+      } catch {
+        regMediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       video.srcObject = regMediaStream;
       await video.play();
     } catch (e) {
@@ -337,15 +339,17 @@ function bindScan() {
       if (foundMediaStream) return;
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
-      video.style.width = "100%";
-      video.style.height = "100%";
-      video.style.objectFit = "cover";
-      video.style.transform = "scaleX(-1)";
+      video.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)";
       foundVideoWrap.innerHTML = "";
       foundVideoWrap.appendChild(video);
-      foundMediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
+      // Try back camera first; fall back to any camera (needed on desktop/DevTools)
+      try {
+        foundMediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+        });
+      } catch {
+        foundMediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       video.srcObject = foundMediaStream;
       await video.play();
     } catch (e) {
@@ -466,17 +470,18 @@ function bindScan() {
     try {
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
-      video.style.width = "100%";
-      video.style.height = "100%";
-      video.style.objectFit = "cover";
-      // Mirror preview so movement looks natural
-      video.style.transform = "scaleX(-1)";
+      video.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)";
       videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
 
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
+      // Try back camera first; fall back to any camera (needed on desktop/DevTools)
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+        });
+      } catch {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       video.srcObject = mediaStream;
       await video.play();
 
