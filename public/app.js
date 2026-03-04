@@ -129,8 +129,9 @@ function bindRegister() {
       if (regMediaStream) return; // already started
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
-      video.style.width = "320px";
-      video.style.height = "240px";
+      video.style.width = "100%";
+      video.style.height = "100%";
+      video.style.objectFit = "cover";
       video.style.transform = "scaleX(-1)";
       videoWrap.innerHTML = "";
       videoWrap.appendChild(video);
@@ -465,8 +466,9 @@ function bindScan() {
     try {
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
-      video.style.width = "360px";
-      video.style.height = "270px";
+      video.style.width = "100%";
+      video.style.height = "100%";
+      video.style.objectFit = "cover";
       // Mirror preview so movement looks natural
       video.style.transform = "scaleX(-1)";
       videoWrap.innerHTML = "";

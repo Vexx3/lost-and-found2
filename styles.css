@@ -198,9 +198,15 @@ input[type="file"] {
 
   .video-wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
     height: auto;
-    background: transparent;
+    background: #1e293b;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .scan-wrap {

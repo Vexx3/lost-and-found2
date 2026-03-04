@@ -80,7 +80,7 @@
                 <button type="button" id="foundStopCam" class="btn secondary">Stop Camera</button>
                 <button type="button" id="foundCapture" class="btn primary">Capture</button>
               </div>
-              <div id="foundVideoWrap" class="video-wrap" style="width:280px;height:210px;"></div>
+              <div id="foundVideoWrap" class="video-wrap"></div>
             </div>
             <div id="foundQuickActions" style="display:flex;flex-direction:column;gap:8px;">
               <input type="file" id="foundPhoto" accept="image/*" />
@@ -158,7 +158,7 @@
             </button>
           </div>
         </div>
-        <button class="btn primary" type="submit">
+        <button class="btn primary" type="submit" style="width:100%;margin-top:8px;">
           Register & Generate QR
         </button>
       </form>
@@ -169,8 +169,8 @@
       <h2>My Registered Items</h2>
       <p>Enter your Student ID to view items you registered.</p>
       <div class="card">
-        <div style="display: flex; gap: 8px; align-items: center">
-          <input id="myStudentId" placeholder="Enter your Student ID" />
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="myStudentId" placeholder="Enter your Student ID" style="min-width:0;flex:1 1 160px;" />
           <button id="myItemsBtn" class="btn primary">Show My Items</button>
         </div>
         <div id="myItemsList" style="margin-top: 12px"></div>
@@ -188,7 +188,7 @@
           <option value="tumblers">Tumblers</option>
           <option value="other">Other</option>
         </select>
-        <input id="searchBar" placeholder="Search items or owners" />
+        <input id="searchBar" placeholder="Search by item name" />
       </div>
       <div id="itemsList" class="list"></div>
     </section>
