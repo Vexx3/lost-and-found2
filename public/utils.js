@@ -1,13 +1,17 @@
-/*
-  utils.js
-  Small shared helpers used across the app/admin pages.
+"use strict";
 
+/*
+==========================================================================
+  Shared Utility Functions
+  Architecture: Global Helpers
+  
   Exposes functions on the global window scope:
   - h(tag, attrs, children): create a DOM node quickly
   - assetUrl(path): passthrough, kept for future hosting tweaks
   - categoryLabel(key), inferCategoryFromName(name)
   - fileToDataUrl(file, maxWidth): downscale image to JPEG data URL
   - downloadQr(itemId): generate and download a QR image as a file
+==========================================================================
 */
 
 // Minimal DOM element helper with safe event binding
@@ -91,7 +95,8 @@ async function downloadQr(itemId) {
     a.remove();
     URL.revokeObjectURL(obj);
   } catch (e) {
-    alert("Failed to generate QR for download.");
+    if (typeof showToast === "function") showToast("Failed to generate QR for download.", "error");
+    else console.error("Failed to generate QR for download.");
   }
 }
 
@@ -122,8 +127,8 @@ function generateQrDataUrl(text, size = 200) {
           const url = canvas
             ? canvas.toDataURL("image/png")
             : img && img.src
-            ? img.src
-            : null;
+              ? img.src
+              : null;
           host.remove();
           if (!url) return reject(new Error("QR render failed"));
           resolve(url);

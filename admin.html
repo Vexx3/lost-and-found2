@@ -1,47 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ifound — Admin</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script defer src="public/localdb.js?v=20251103"></script>
-    <script defer src="public/utils.js?v=20251103"></script>
-    <script defer src="public/admin.js?v=20251103"></script>
-  </head>
-  <body>
-    <header class="topbar">
-      <div class="brand">ifound</div>
-      <nav>
-        <a href="index.html#home">Home</a>
-        <a href="index.html#scan">Scan QR</a>
-        <a href="index.html#register">Register</a>
-        <a href="index.html#myitems">My Registered Items</a>
-        <a href="index.html#lost">Lost Items</a>
-        <a href="index.html#faq">FAQ</a>
-        <a href="admin.html" class="admin-link">Admin</a>
-      </nav>
-    </header>
-    <main style="max-width: 1100px; margin: 24px auto; padding: 0 16px">
-      <div id="adminContent">
-        <section class="card">
-          <h2>Pending Found Reports</h2>
-          <div id="reports"></div>
-        </section>
-        <section class="card" style="margin-top: 12px">
-          <h2>Claims</h2>
-          <div id="claims"></div>
-        </section>
-        <section class="card" style="margin-top: 12px">
-          <h2>Analytics</h2>
-          <div id="analytics"></div>
-        </section>
-        <section class="card" style="margin-top: 12px">
-          <h2>Data Controls</h2>
-          <button id="exportData" class="btn">Export JSON</button>
-          <input type="file" id="importFile" accept="application/json" />
-        </section>
-      </div>
-    </main>
-  </body>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ifound — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="public/localdb.js?v=20251103"></script>
+  <script defer src="public/utils.js?v=20251103"></script>
+  <script defer src="public/admin.js?v=20251103"></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">ifound</div>
+    <button class="hamburger" id="menuToggle" aria-label="Toggle menu">&#9776;</button>
+    <nav id="mainNav">
+      <a href="index.html#home">Home</a>
+      <a href="index.html#scan">Report Item</a>
+      <a href="index.html#register">Register</a>
+      <a href="index.html#myitems">My Items</a>
+      <a href="index.html#lost">Lost Items</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="admin.html" class="admin-link active-link">Admin</a>
+    </nav>
+  </header>
+  <main style="max-width: 1100px; margin: 24px auto; padding: 0 16px">
+    <div id="adminContent">
+      <section class="card">
+        <h2>Pending Found Reports</h2>
+        <div id="reports"></div>
+      </section>
+      <section class="card" style="margin-top: 12px">
+        <h2>Claims</h2>
+        <div id="claims"></div>
+      </section>
+      <section class="card" style="margin-top: 12px">
+        <h2>Analytics</h2>
+        <div id="analytics"></div>
+      </section>
+      <section class="card" style="margin-top: 12px">
+        <h2>Data Controls</h2>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px">
+          <button id="exportData" class="btn primary">Export JSON</button>
+          <label class="btn secondary" style="cursor:pointer;margin:0">
+            Import JSON
+            <input type="file" id="importFile" accept="application/json" style="display:none" />
+          </label>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <small>ifound &mdash; STI College Mu&ntilde;oz-EDSA &copy; 2025&ndash;2026 &bull; Admin Dashboard</small>
+  </footer>
+  <script>
+    // Hamburger toggle for admin
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggle = document.getElementById("menuToggle");
+      const nav = document.getElementById("mainNav");
+      if (toggle && nav) {
+        toggle.addEventListener("click", () => nav.classList.toggle("open"));
+      }
+    });
+  </script>
+</body>
+
 </html>

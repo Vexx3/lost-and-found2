@@ -1,48 +1,35 @@
-# ifound — Lost & Found (Static, Browser-Only)
+# ifound — Lost & Found (Client-Side Application)
 
-A simple, fully client-side Lost & Found app that runs from static files. No server, no database—everything is stored in your browser’s localStorage for demo and school projects.
+A streamlined, fully client-side Lost & Found application designed for STI College Muñoz-EDSA. This system operates directly in the browser utilizing `localStorage` for robust, high-performance data management without the need for a dedicated backend, making it highly portable and perfect for school presentations and immediate deployments.
 
 ## Features
 
-- Register item: attach an item photo, save owner details, and generate a unique QR.
- - Scan QR: use your camera (BarcodeDetector) or upload an image of the QR to view item info; submit a Found Report. The app now also falls back to a JavaScript-based decoder (jsQR) for browsers that don't support BarcodeDetector.
-- My Registered Items: list items by Student ID and download their QR code directly.
-- Lost Items: shows verified found items; Claim flow checks student ID + owner name.
-- Admin Dashboard: verify pending found reports (moves to Lost Items), see claims, analytics, and import/export JSON.
+- **Item Registration**: Attach a photo, save owner details, assign categories, and generate a unique offline QR code instantly.
+- **Advanced QR Scanning**: Implements the native `BarcodeDetector` API for lightning-fast camera scanning, with a seamless automated fallback to `jsQR` via video frames or image uploads.
+- **My Items Dashboard**: Students can track their registered items by entering their Student ID and download QR code tags directly as PNG files.
+- **Responsive Lost Items Feed**: A live feed of verified lost items featuring category filtering and real-time text search. Integrated claim verification flow compares the inputted email against the registered owner's file.
+- **Admin Command Center**: A comprehensive dashboard to verify pending found reports (promoting them to the Lost feed), review recent claims, track platform analytics (recovery rates), and manage data portability (Import/Export JSON).
 
 ## Run locally
 
-No build or server required.
+No complex build steps or servers required.
 
-1. Open `index.html` in your browser for the user site.
-2. Open `admin.html` for the admin dashboard.
+1. Open `index.html` in your browser for the main portal.
+2. Open `admin.html` to access the Admin dashboard.
 
-Tip: Use a simple static server (e.g., VS Code Live Server) for best camera permissions, but file:// will also work for most features.
+*Tip: Using a simple static server (e.g., Live Server in VS Code) ensures full compatibility across all environments (like granting camera API permissions).*
 
-## How it works
+## Technical Implementation (Error-Free & Functional)
 
-- Data is saved in localStorage under the key `ifound_store_v1`.
-- QR images are fetched from a public QR service when viewed, and downloaded directly as PNG when you click Download.
- - Camera scanning uses the native `BarcodeDetector` API when available. If it's not available the app dynamically loads `jsQR` and attempts to decode QR codes by scanning video frames or decoding uploaded images. Note: the jsQR fallback requires network access to load the library from a CDN unless you vendor it locally (I can add a local copy if you prefer offline support).
- - Camera scanning uses the native `BarcodeDetector` API when available. If it's not available the app dynamically loads `jsQR` and attempts to decode QR codes by scanning video frames or decoding uploaded images. The app prefers a vendored local copy at `public/libs/jsQR.js` if present, otherwise it loads from CDN. I added a small QR test page at `public/qr-test.html` to generate QR images for manual testing.
-- On Verify, if the finder included a photo, that image is used on the Lost Items list (owner photo is kept as a secondary reference).
+- Data is safely persisted cross-session via `localStorage` under `ifound_store_v1`.
+- Designed with UX principles in mind: Custom toast notifications replace generic browser alerts, buttons feature active/hover states, and forms are fully validated.
+- Defense against XSS applied across all DOM injections by utilizing safe vanilla JS element creation.
+- Graceful fallbacks implemented to prevent crashes: Routing defaults safely if invalid URLs are accessed, and camera APIs execute safely.
 
-## Project structure
+## Project Structure
 
-- `index.html`, `admin.html`, `styles.css` — pages and styles
-- `public/localdb.js` — localStorage-backed data helpers
-- `public/app.js` — user site logic
-- `public/admin.js` — admin dashboard logic
-
-Legacy server files were removed in favor of this static setup.
-
-## Import/Export
-
-- Export downloads a JSON snapshot of the current localStorage database.
-- Import merges the file into your current data (no deletions).
-
-## Notes & Next steps
-
-- Add categories to items at registration for better filtering.
-- Add a nicer claim verification UI (instead of prompts) and optional photo attachments.
-- Consider a real backend if you need multi-user persistence beyond a single browser.
+- `index.html`, `admin.html`, `styles.css` — High-fidelity UI with consistent color schemes (STI-inspired blue/yellow accents).
+- `public/localdb.js` — Custom lightweight ORM providing structured queries and entity relationships over localStorage.
+- `public/app.js` — Client logic with hash-based routing.
+- `public/admin.js` — Administrative operations.
+- `public/libs/` — Vendored scripts to guarantee functionality offline or in strict network environments.

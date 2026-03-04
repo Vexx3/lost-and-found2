@@ -1,12 +1,34 @@
-/*
-  Admin dashboard logic (localStorage only)
-  - Pending Found Reports: verify to move items into Lost Items
-  - Claims: list submitted claims
-  - Analytics: simple counts and recovery rate
-  - Data controls: export/import JSON snapshot
+"use strict";
 
-  Depends on utils.js (h, assetUrl) and localdb.js (ifoundDB).
+/*
+==========================================================================
+  Admin Dashboard Controller (Client-side)
+  Architecture Pattern: Modular / Functional
+  Dependencies: utils.js, localdb.js
+  
+  Modules breakdown:
+  1. Initialization
+  2. Rendering Pending Found Reports
+  3. Rendering Claims
+  4. Rendering Analytics
+  5. Data Controls (Import/Export)
+==========================================================================
 */
+
+// Toast notification helper
+function showToast(message, type = "info") {
+  const existing = document.querySelectorAll(".toast-notification");
+  existing.forEach((t) => t.remove());
+  const toast = document.createElement("div");
+  toast.className = "toast-notification toast-" + type;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("show"));
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 350);
+  }, 3500);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   loadPending();
@@ -40,29 +62,29 @@ async function loadPending() {
           [
             report.photoPath
               ? h("div", {}, [
-                  h(
-                    "div",
-                    { style: "font-size:12px;color:#6b7280" },
-                    "Finder Photo"
-                  ),
-                  h("img", {
-                    src: assetUrl(report.photoPath),
-                    style: "max-width:200px;border-radius:6px;margin-top:4px",
-                  }),
-                ])
+                h(
+                  "div",
+                  { style: "font-size:12px;color:#6b7280" },
+                  "Finder Photo"
+                ),
+                h("img", {
+                  src: assetUrl(report.photoPath),
+                  style: "max-width:200px;border-radius:6px;margin-top:4px",
+                }),
+              ])
               : null,
             report.itemPhoto
               ? h("div", {}, [
-                  h(
-                    "div",
-                    { style: "font-size:12px;color:#6b7280" },
-                    "Owner Photo"
-                  ),
-                  h("img", {
-                    src: assetUrl(report.itemPhoto),
-                    style: "max-width:200px;border-radius:6px;margin-top:4px",
-                  }),
-                ])
+                h(
+                  "div",
+                  { style: "font-size:12px;color:#6b7280" },
+                  "Owner Photo"
+                ),
+                h("img", {
+                  src: assetUrl(report.itemPhoto),
+                  style: "max-width:200px;border-radius:6px;margin-top:4px",
+                }),
+              ])
               : null,
           ]
         ),
@@ -94,15 +116,15 @@ async function loadPending() {
                     // Refresh lists/analytics
                     loadPending();
                     loadAnalytics();
-                    alert("Verified and moved to Lost Items.");
+                    showToast("Verified and moved to Lost Items.", "success");
                   } else {
-                    alert("Failed to verify.");
+                    showToast("Failed to verify.", "error");
                     btn.disabled = false;
                     btn.textContent = prev;
                   }
                 } catch (e) {
                   console.error("Verify error", e);
-                  alert("Error during verification.");
+                  showToast("Error during verification.", "error");
                   btn.disabled = false;
                   btn.textContent = prev;
                 }
@@ -184,7 +206,7 @@ function bindDataControls() {
         a.click();
         URL.revokeObjectURL(url);
       } catch (e) {
-        alert("Export failed");
+        showToast("Export failed.", "error");
       }
     });
   }
@@ -197,13 +219,13 @@ function bindDataControls() {
         const data = JSON.parse(text);
         const ok = ifoundDB.importMerge(data);
         if (ok) {
-          alert("Import complete");
+          showToast("Import complete! Data has been merged.", "success");
           loadAnalytics();
           loadPending();
           loadClaims();
-        } else alert("Import failed");
+        } else showToast("Import failed.", "error");
       } catch (e) {
-        alert("Invalid JSON file");
+        showToast("Invalid JSON file.", "error");
       }
     });
   }

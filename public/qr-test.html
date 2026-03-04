@@ -1,15 +1,18 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>QR Test — ifound</title>
   <link rel="stylesheet" href="../styles.css" />
 </head>
+
 <body>
   <main style="padding:16px;max-width:780px;margin:0 auto">
     <h1>QR Test</h1>
-    <p>Generate sample QR codes for testing the scanner. Use the generated image to test upload or point your camera to scan.</p>
+    <p>Generate sample QR codes for testing the scanner. Use the generated image to test upload or point your camera to
+      scan.</p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
       <input id="testId" placeholder="Enter item id (e.g. 1234 or uuid)" style="flex:1" />
       <button id="genBtn" class="btn">Generate QR</button>
@@ -46,4 +49,5 @@
     document.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', e => gen(e.target.dataset.id)));
   </script>
 </body>
+
 </html>

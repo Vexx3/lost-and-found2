@@ -1,15 +1,18 @@
+"use strict";
+
 /*
-  localdb.js
-  A tiny in-browser data layer backed by localStorage.
+==========================================================================
+  Local Database Manager
+  Architecture Pattern: IIFE (Immediately Invoked Function Expression) / Singleton
+  Role: Tiny in-browser data layer backed by localStorage.
 
   Collections:
-  - items: registered items { id, itemName, studentId, ownerName, category, contact/email/strand, photoPath, status, createdAt, foundPhotoPath?, lastClaimedAt? }
-  - found_reports: reports from finders { id, itemId, finderName, location, photoPath?, status, createdAt }
-  - claims: claims submitted by owners { id, itemId, claimantName, createdAt }
+  - items: registered items
+  - found_reports: reports from finders
+  - claims: claims submitted by owners
 
-  Public API (window.ifoundDB): addItem, getItem, listItemsByStudent, listLostItems,
-  addFoundReport, listPendingReportsWithItem, verifyReportMoveToLost, addClaim,
-  listClaimsWithItem, analytics, exportAll, importMerge
+  Public API (window.ifoundDB) exposed for usage by other modules.
+==========================================================================
 */
 
 (function () {
@@ -163,8 +166,8 @@
     return true;
   }
 
-  function addClaim({ itemId, claimantName, proofPhoto = null }) {
-    // Mark item as claimed and create a claim record; optional proof photo
+  function addClaim({ itemId, claimantName }) {
+    // Mark item as claimed and create a claim record
     const db = load();
     const item = db.items.find((x) => x.id === itemId);
     if (!item) return null;
@@ -173,7 +176,6 @@
       id: db.seq.claims,
       itemId,
       claimantName,
-      proofPhoto: proofPhoto || null,
       createdAt: nowIso(),
     };
     db.claims.push(claim);

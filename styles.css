@@ -1,14 +1,20 @@
 /* Theme variables */
 :root {
   --blue: #0b61ff;
+  --blue-hover: #0950d4;
   --yellow: #ffd400;
+  --yellow-hover: #e6bf00;
   --muted: #6b7280;
   --bg: #f7fbff;
   --card: #ffffff;
+  --success: #10b981;
+  --error: #ef4444;
 }
+
 * {
   box-sizing: border-box;
 }
+
 /* Base layout */
 body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
@@ -17,6 +23,7 @@ body {
   background: var(--bg);
   color: #0f172a;
 }
+
 .topbar {
   display: flex;
   align-items: center;
@@ -29,30 +36,36 @@ body {
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
+
 .topbar .brand {
   font-weight: 700;
   font-size: 20px;
 }
+
 .topbar nav a {
   color: #fff;
   margin-left: 12px;
   text-decoration: none;
 }
+
 .admin-link {
   background: rgba(255, 255, 255, 0.12);
   padding: 6px 10px;
   border-radius: 6px;
 }
+
 main {
   max-width: 1100px;
   margin: 28px auto;
   padding: 0 16px;
 }
+
 /* Panels (hash navigation) */
 .panel {
   display: none;
   padding: 18px;
 }
+
 .panel.active {
   display: block;
 }
@@ -61,14 +74,17 @@ main {
 .panel:target {
   display: block;
 }
+
 /* Typography helpers */
 .lead {
   color: var(--muted);
   font-size: 18px;
 }
+
 .cta-row {
   margin-top: 18px;
 }
+
 /* Buttons */
 .btn {
   display: inline-block;
@@ -81,15 +97,36 @@ main {
   cursor: pointer;
   font-size: 14px;
   line-height: 1.2;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
+
+.btn:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
 .btn.primary {
   background: var(--blue);
   color: #fff;
 }
+
+.btn.primary:hover {
+  background: var(--blue-hover);
+}
+
 .btn.secondary {
   background: var(--yellow);
   color: #08306b;
 }
+
+.btn.secondary:hover {
+  background: var(--yellow-hover);
+}
+
 /* Card container */
 .card {
   background: var(--card);
@@ -98,12 +135,14 @@ main {
   box-shadow: 0 2px 8px rgba(12, 20, 40, 0.04);
   margin-top: 12px;
 }
+
 /* Two-column form layout */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+
 input,
 select {
   padding: 10px;
@@ -111,9 +150,11 @@ select {
   border: 1px solid #e6eef8;
   width: 100%;
 }
+
 input[type="file"] {
   padding: 6px;
 }
+
 /* Lost items filter row */
 .filters {
   display: flex;
@@ -121,108 +162,113 @@ input[type="file"] {
   align-items: center;
   margin-bottom: 12px;
 }
+
 /* Generic responsive grid list */
 .list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
 }
+
 /* Lost item */
 .item {
   padding: 12px;
   border-radius: 8px;
   background: linear-gradient(180deg, #fff, #f7fbff);
 }
+
 /* Item images */
 .item img {
   width: 100%;
-  height: auto; /* show full image height */
-  max-height: 260px; /* prevent extremely tall images from breaking layout */
-  object-fit: contain; /* preserve aspect ratio, don't crop */
+  height: auto;
+  /* show full image height */
+  max-height: 260px;
+  /* prevent extremely tall images from breaking layout */
+  object-fit: contain;
+  /* preserve aspect ratio, don't crop */
   border-radius: 6px;
-  background: #fff; /* helps white images blend with cards */
+  background: #fff;
+  /* helps white images blend with cards */
 }
+
 .item .meta {
   margin-top: 8px;
 }
-footer {
-  padding: 18px;
-  text-align: center;
-  color: var(--muted);
-}
+
 /* Responsive adjustments */
 @media (max-width: 700px) {
   .two-col {
     grid-template-columns: 1fr;
   }
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .topbar nav {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .topbar nav a {
-    margin-left: 0;
-    padding: 6px 8px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 6px;
-  }
+
   .video-wrap {
     width: 100%;
     max-width: 420px;
     height: auto;
     background: transparent;
   }
+
   .scan-wrap {
     flex-direction: column;
     align-items: stretch;
   }
+
   .scan-controls {
     width: 100%;
   }
+
   .cta-row {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
+
   main {
     margin: 18px auto;
     padding: 0 12px;
   }
+
   .btn {
     font-size: 16px;
     padding: 12px 16px;
   }
+
   input,
   select {
     font-size: 16px;
   }
+
   .list {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
+
 .video-wrap {
-  width: 360px;
+  width: 100%;
+  max-width: 360px;
   height: 270px;
   border-radius: 8px;
   overflow: hidden;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 /* Scan section layout */
 .scan-wrap {
   display: flex;
   gap: 14px;
   align-items: flex-start;
 }
+
 /* Stack scan controls */
 .scan-controls {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 /* QR example block */
 .qr-output {
   display: flex;
@@ -230,6 +276,7 @@ footer {
   gap: 8px;
   align-items: center;
 }
+
 /* Category badge */
 .badge {
   display: inline-block;
@@ -240,15 +287,199 @@ footer {
 }
 
 /* Status labels */
-.status-pending {
+.status-pending,
+.status-registered {
   background: rgba(255, 193, 7, 0.12);
   color: #7a4a00;
-  padding: 6px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
 }
+
 .status-claimed {
   background: rgba(16, 185, 129, 0.12);
   color: #065f46;
-  padding: 6px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-lost {
+  background: rgba(239, 68, 68, 0.10);
+  color: #991b1b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Input focus & transition */
+input,
+select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(11, 97, 255, 0.12);
+}
+
+/* Toast notifications */
+.toast-notification {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 24px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 99999;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  max-width: 90vw;
+  text-align: center;
+  pointer-events: none;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+  background: #059669;
+}
+
+.toast-error {
+  background: #dc2626;
+}
+
+.toast-info {
+  background: #2563eb;
+}
+
+/* Claim modal styles (replaces inline styles) */
+.modal {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-card {
+  position: relative;
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  z-index: 10000;
+  animation: modalSlideIn 0.25s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover effect */
+.item.card {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.item.card:hover {
+  box-shadow: 0 6px 20px rgba(12, 20, 40, 0.10);
+  transform: translateY(-2px);
+}
+
+/* Empty state helper */
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Navigation active link highlight */
+.topbar nav a.active-link {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* Footer */
+footer {
+  padding: 24px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  border-top: 1px solid #e6eef8;
+  margin-top: 32px;
+}
+
+/* Mobile hamburger menu */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+@media (max-width: 700px) {
+  .hamburger {
+    display: block;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+  }
+
+  .topbar nav.open {
+    display: flex;
+  }
+
+  .topbar nav a {
+    margin-left: 0;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+  }
 }
