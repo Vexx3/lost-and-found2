@@ -743,22 +743,25 @@ async function loadScannedItem(itemId, container) {
     const item = ifoundDB.getItem(itemId);
     if (!item) throw new Error("Item not found");
 
-    // Block found-form for items that are already claimed or archived
-    if (item.status === "claimed" || item.status === "archived") {
+    // Block found-form only for archived items (expired — admin must handle)
+    if (item.status === "archived") {
       hideFoundForm();
-      const msg =
-        item.status === "claimed"
-          ? "This item has already been claimed by its owner."
-          : "This item has been archived (expired). Please contact the admin.";
       container.innerHTML = "";
       container.appendChild(
-        h("div", { style: "color:#991b1b;background:rgba(239,68,68,0.08);padding:12px;border-radius:8px;" }, msg)
+        h("div", { style: "color:#991b1b;background:rgba(239,68,68,0.08);padding:12px;border-radius:8px;" },
+          "This item has been archived (expired). Please contact the admin office directly.")
       );
       return;
     }
 
-    // For registered or lost items — show info and open found form
+    // For all other statuses (registered, lost, claimed) — show info and open found form
+    // A claimed item can be lost again and re-reported normally.
+    const previouslyClaimed = item.status === "claimed";
     const wrap = h("div", {}, [
+      previouslyClaimed
+        ? h("div", { style: "font-size:13px;color:#7a4a00;background:rgba(255,193,7,0.12);padding:8px 12px;border-radius:6px;margin-bottom:8px;" },
+            "This item was previously claimed. You can still report it found again.")
+        : null,
       h("div", { style: "display:flex; gap:12px; align-items:flex-start" }, [
         item.photoPath
           ? h("img", {
