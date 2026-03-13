@@ -119,13 +119,70 @@ Thank you,
 The iFound Admin Team
 STI College Muñoz-EDSA`;
 
+    const htmlBody = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+      <h2 style="color: #ef4444;">🚨 Item Found Notification</h2>
+      <p>Dear <b>${item.ownerName}</b>,</p>
+      <p>Your registered item "<b>${item.itemName}</b>" has been officially reported as <strong>FOUND</strong>!</p>
+      <p>The STI Admin has verified the report, and your item is now securely held at the main office and listed on the official Lost Items board.</p>
+      
+      <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1f2937;">📍 Recovery Details:</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li><b>Reported by:</b> ${report.finderName || 'Unknown / Anonymous'}</li>
+          <li><b>Location Found:</b> ${report.location || 'Not Specified'}</li>
+          <li><b>Date Reported:</b> ${new Date(report.createdAt).toLocaleString()}</li>
+        </ul>
+      </div>
+
+      ${report.photoDataUrl ? `
+      <div style="margin: 20px 0;">
+        <h3>📸 Photo of your found item:</h3>
+        <img src="cid:founditemphoto" alt="Found Item" style="max-width: 100%; border-radius: 8px; border: 1px solid #ccc;"/>
+      </div>
+      ` : ''}
+
+      <h3>✅ How to Claim Your Item:</h3>
+      <ol>
+        <li>Log into the iFound system and open the "Lost Items" page.</li>
+        <li>Locate your item and click the "Claim Item" button to submit your claim.</li>
+        <li>Proceed to the Admin Office and present your <b>Student ID</b> to officially retrieve it.</li>
+      </ol>
+
+      <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+      
+      <div style="font-size: 13px; color: #6b7280; background: #fffbeb; padding: 15px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+        ⚠️ <b>SECURITY NOTICE (JOKE / FALSE REPORTS):</b><br/>
+        If your item is NOT lost and is safely with you, a friend or another student may have scanned your QR sticker as a joke or by mistake. If the item is safely in your possession, NO ACTION is required. You can completely disregard this email. Please ensure your QR stickers remain secure!
+      </div>
+
+      <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
+        Thank you,<br/>
+        <b>The iFound Admin Team</b><br/>
+        STI College Muñoz-EDSA
+      </p>
+    </div>`;
+
+    const mailOptions: any = {
+      from: `"iFound Admin Team" <${process.env.EMAIL_USER}>`,
+      to: item.email,
+      subject: `📢 Action Required: Your Item "${item.itemName}" was reported found!`,
+      text: textBody,
+      html: htmlBody
+    };
+
+    if (report.photoDataUrl && report.photoDataUrl.startsWith('data:image')) {
+      const matches = report.photoDataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        mailOptions.attachments = [{
+          filename: 'found-item.jpg',
+          content: Buffer.from(matches[2], 'base64'),
+          cid: 'founditemphoto'
+        }];
+      }
+    }
+
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: item.email,
-        subject: `📢 Action Required: Your Item "${item.itemName}" was reported found!`,
-        text: textBody
-      });
+      await transporter.sendMail(mailOptions);
       console.log('Verification email sent to', item.email);
     } catch (e: any) {
       console.error("Verification email delivery failed:", e.message);
