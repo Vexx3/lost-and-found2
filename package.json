@@ -1,0 +1,37 @@
+{
+  "name": "lost-and-found",
+  "version": "1.0.0",
+  "description": "A streamlined, fully client-side Lost & Found application designed for STI College Muñoz-EDSA. This system operates directly in the browser utilizing `localStorage` for robust, high-performance data management without the need for a dedicated backend, making it highly portable and perfect for school presentations and immediate deployments.",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx server.ts",
+    "dev": "tsx watch --ignore database.json server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vexx3/lost-and-found2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Vexx3/lost-and-found2/issues"
+  },
+  "homepage": "https://github.com/Vexx3/lost-and-found2#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/nodemailer": "^7.0.11",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
