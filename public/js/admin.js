@@ -29,7 +29,9 @@ const ifoundDB = {
         report.status = "verified";
         await this.save();
         try {
-            await api.request("/notify-verified", "POST", { reportId });
+            // Removed backend notify call, emails send via EmailJS in addFoundReport automatically for frontend
+            // Or we can manually trigger emailjs here if preferred.
+            console.log("Verified found report. Emails send via frontend JS now.");
         }
         catch (e) {
             console.error("Failed to notify verified:", e);

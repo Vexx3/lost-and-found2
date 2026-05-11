@@ -32,7 +32,7 @@ export function inferCategoryFromName(name) {
         return "tumblers";
     return "other";
 }
-export function fileToDataUrl(file, maxWidth = 800) {
+export function fileToDataUrl(file, maxWidth = 640) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -47,7 +47,7 @@ export function fileToDataUrl(file, maxWidth = 800) {
                 const ctx = canvas.getContext("2d");
                 if (ctx) {
                     ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL("image/jpeg", 0.8));
+                    resolve(canvas.toDataURL("image/jpeg", 0.5));
                 }
                 else {
                     reject(new Error("No ctx"));

@@ -4,8 +4,8 @@
   "description": "A streamlined, fully client-side Lost & Found application designed for STI College Muñoz-EDSA. This system operates directly in the browser utilizing `localStorage` for robust, high-performance data management without the need for a dedicated backend, making it highly portable and perfect for school presentations and immediate deployments.",
   "main": "index.js",
   "scripts": {
-    "start": "tsx server.ts",
-    "dev": "tsx watch --ignore database.json server.ts",
+    "build": "tsc",
+    "start": "npx serve .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

@@ -248,12 +248,30 @@ input[type="file"] {
   max-width: 360px;
   aspect-ratio: 4 / 3;
   border-radius: 8px;
+  background: #e2e8f0;
   overflow: hidden;
-  background: #1e293b;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+input:focus, select:focus, .btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.spinner {
+  display: inline-block;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-left-color: var(--blue);
+  border-radius: 50%;
+  width: 24px; 
+  height: 24px;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Scan section layout */
 .scan-wrap {

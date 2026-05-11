@@ -11,6 +11,27 @@ let scannedItemId: string | null = null;
 let scanning = false;
 let mediaStream: MediaStream | null = null;
 
+let foundMediaStreamGlobal: MediaStream | null = null;
+let foundVideoWrapGlobal: HTMLElement | null = null;
+let scanMediaStreamGlobal: MediaStream | null = null;
+let scanVideoWrapGlobal: Element | null = null;
+
+export function stopFoundCamera() {
+  if (foundMediaStreamGlobal) {
+    foundMediaStreamGlobal.getTracks().forEach((t) => t.stop());
+    foundMediaStreamGlobal = null;
+  }
+  if (foundVideoWrapGlobal) foundVideoWrapGlobal.innerHTML = "";
+}
+
+export function stopScanCamera() {
+  if (scanMediaStreamGlobal) {
+    scanMediaStreamGlobal.getTracks().forEach((t) => t.stop());
+    scanMediaStreamGlobal = null;
+  }
+  if (scanVideoWrapGlobal) scanVideoWrapGlobal.innerHTML = "";
+}
+
 function showFoundForm() {
   const ff = document.getElementById("found-form");
   if (ff) ff.style.display = "block";
@@ -87,7 +108,8 @@ export function bindScan() {
   const foundCamPanel = document.getElementById("foundCamPanel");
   const foundQuickActions = document.getElementById("foundQuickActions");
 
-  let foundMediaStream: MediaStream | null = null;
+  foundVideoWrapGlobal = foundVideoWrap;
+  
   let foundCapturedDataUrl: string | null = null;
 
   function showFoundPhotoPreview(src: string | null) {
@@ -103,7 +125,7 @@ export function bindScan() {
 
   async function startFoundCamera() {
     try {
-      if (foundMediaStream) return;
+      if (foundMediaStreamGlobal) return;
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
       video.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)";
@@ -112,29 +134,19 @@ export function bindScan() {
         foundVideoWrap.appendChild(video);
       }
       try {
-        foundMediaStream = await navigator.mediaDevices.getUserMedia({
+        foundMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
         });
       } catch {
-        foundMediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        foundMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({ video: true });
       }
-      video.srcObject = foundMediaStream;
+      video.srcObject = foundMediaStreamGlobal;
       await video.play();
     } catch (e) {
       console.error("Found-form camera error", e);
       showToast("Unable to access camera. Please allow permission or use file upload.", "error");
     }
   }
-
-  function stopFoundCamera() {
-    if (foundMediaStream) {
-      foundMediaStream.getTracks().forEach((t) => t.stop());
-      foundMediaStream = null;
-    }
-    if (foundVideoWrap) foundVideoWrap.innerHTML = "";
-  }
-
-  (window as any).stopFoundCamera = stopFoundCamera;
 
   function toggleFoundCamPanel(show: boolean) {
     if (!foundCamPanel) return;
@@ -166,7 +178,7 @@ export function bindScan() {
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         ctx.restore();
-        foundCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        foundCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.5);
         showFoundPhotoPreview(foundCapturedDataUrl);
         toggleFoundCamPanel(false);
       }
@@ -181,7 +193,7 @@ export function bindScan() {
       const f = (e.target as HTMLInputElement).files?.[0];
       if (!f) { showFoundPhotoPreview(null); return; }
       try {
-        const dataUrl = await fileToDataUrl(f, 800);
+        const dataUrl = await fileToDataUrl(f, 640);
         showFoundPhotoPreview(dataUrl);
       } catch (err) {
         showFoundPhotoPreview(null);
@@ -207,6 +219,7 @@ export function bindScan() {
   let scanVideoEl: HTMLVideoElement | null = null;
 
   async function startCameraScan() {
+    scanVideoWrapGlobal = videoWrap;
     try {
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
@@ -217,13 +230,13 @@ export function bindScan() {
       }
 
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
+        scanMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
         });
       } catch {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        scanMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({ video: true });
       }
-      video.srcObject = mediaStream;
+      video.srcObject = scanMediaStreamGlobal;
       await video.play();
 
       scanVideoEl = video;
@@ -244,7 +257,7 @@ export function bindScan() {
     }
   }
 
-  async function stopCamera() {
+  function stopCameraLocal() {
     scanning = false;
     if (scanRaf) {
       cancelAnimationFrame(scanRaf);
@@ -257,13 +270,8 @@ export function bindScan() {
       } catch (e) { }
       scanVideoEl = null;
     }
-    if (mediaStream) {
-      mediaStream.getTracks().forEach((t) => t.stop());
-      mediaStream = null;
-    }
-    if (videoWrap) videoWrap.innerHTML = "";
+    stopScanCamera();
   }
-  (window as any).stopScanCamera = stopCamera;
 
   function startJsQRLoop(video: HTMLVideoElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, resultCard: HTMLElement) {
     const tickFallback = () => {
@@ -280,7 +288,7 @@ export function bindScan() {
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code && code.data) {
               scannedItemId = (code.data || "").trim();
-              stopCamera();
+              stopCameraLocal();
               showFoundForm();
               if (scannedItemId && resultCard) loadScannedItem(scannedItemId, resultCard);
               return;
@@ -335,7 +343,7 @@ export function bindScan() {
   }
 
   startBtn?.addEventListener("click", startCameraScan);
-  stopBtn?.addEventListener("click", stopCamera);
+  stopBtn?.addEventListener("click", stopCameraLocal);
   imgFile?.addEventListener("change", (e) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (f) decodeFromImage(f);

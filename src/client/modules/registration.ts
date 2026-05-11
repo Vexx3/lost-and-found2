@@ -2,6 +2,17 @@ import { api } from "../api.js";
 import { showToast } from "./ui.js";
 import { fileToDataUrl } from "./utils.js";
 
+let regMediaStreamGlobal: MediaStream | null = null;
+let regVideoWrapGlobal: HTMLElement | null = null;
+
+export function stopRegCamera() {
+  if (regMediaStreamGlobal) {
+    regMediaStreamGlobal.getTracks().forEach((t) => t.stop());
+    regMediaStreamGlobal = null;
+  }
+  if (regVideoWrapGlobal) regVideoWrapGlobal.innerHTML = "";
+}
+
 export function bindRegister() {
   const form = document.getElementById("registerForm") as HTMLFormElement;
   if (!form) return;
@@ -16,7 +27,8 @@ export function bindRegister() {
   const quickActions = document.getElementById("regQuickActions");
   const catSelect = document.getElementById("itemCategory") as HTMLSelectElement;
 
-  let regMediaStream: MediaStream | null = null;
+  regVideoWrapGlobal = videoWrap;
+  
   let regCapturedDataUrl: string | null = null;
 
   function showPreview(src: string | null) {
@@ -32,7 +44,7 @@ export function bindRegister() {
 
   async function startRegCamera() {
     try {
-      if (regMediaStream) return;
+      if (regMediaStreamGlobal) return;
       const video = document.createElement("video");
       video.setAttribute("playsinline", "");
       video.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)";
@@ -42,13 +54,13 @@ export function bindRegister() {
       }
 
       try {
-        regMediaStream = await navigator.mediaDevices.getUserMedia({
+        regMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
         });
       } catch {
-        regMediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        regMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({ video: true });
       }
-      video.srcObject = regMediaStream;
+      video.srcObject = regMediaStreamGlobal;
       await video.play();
     } catch (e) {
       console.error("Register camera error", e);
@@ -56,23 +68,19 @@ export function bindRegister() {
     }
   }
 
-  function stopRegCamera() {
-    if (regMediaStream) {
-      regMediaStream.getTracks().forEach((t) => t.stop());
-      regMediaStream = null;
-    }
-    if (videoWrap) videoWrap.innerHTML = "";
+  function stopRegCameraLocal() {
+    stopRegCamera();
   }
 
-  // Bind to global for router cleanup
-  (window as any).stopRegCamera = stopRegCamera;
+  // Remove global binding, it will be handled by exporting a dedicated cleanup directly below
+
 
   function toggleCamPanel(show: boolean) {
     if (!camPanel) return;
     camPanel.style.display = show ? "block" : "none";
     if (quickActions) quickActions.style.display = show ? "none" : "flex";
     if (show) startRegCamera();
-    else stopRegCamera();
+    else stopRegCameraLocal();
   }
 
   if (fileInput) {
@@ -84,7 +92,7 @@ export function bindRegister() {
         return;
       }
       try {
-        const dataUrl = await fileToDataUrl(f, 800);
+        const dataUrl = await fileToDataUrl(f, 640);
         showPreview(dataUrl);
       } catch (err) {
         showPreview(null);
@@ -115,7 +123,7 @@ export function bindRegister() {
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         ctx.restore();
-        regCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        regCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.5);
         showPreview(regCapturedDataUrl);
         toggleCamPanel(false);
       }

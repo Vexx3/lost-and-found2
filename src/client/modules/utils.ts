@@ -34,7 +34,7 @@ export function inferCategoryFromName(name: string): string {
   return "other";
 }
 
-export function fileToDataUrl(file: File, maxWidth: number = 800): Promise<string> {
+export function fileToDataUrl(file: File, maxWidth: number = 640): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -49,7 +49,7 @@ export function fileToDataUrl(file: File, maxWidth: number = 800): Promise<strin
         const ctx = canvas.getContext("2d");
         if (ctx) {
             ctx.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL("image/jpeg", 0.8));
+            resolve(canvas.toDataURL("image/jpeg", 0.5));
         } else {
             reject(new Error("No ctx"));
         }

@@ -4,6 +4,26 @@ import { fileToDataUrl, assetUrl, maskName } from "./utils.js";
 let scannedItemId = null;
 let scanning = false;
 let mediaStream = null;
+let foundMediaStreamGlobal = null;
+let foundVideoWrapGlobal = null;
+let scanMediaStreamGlobal = null;
+let scanVideoWrapGlobal = null;
+export function stopFoundCamera() {
+    if (foundMediaStreamGlobal) {
+        foundMediaStreamGlobal.getTracks().forEach((t) => t.stop());
+        foundMediaStreamGlobal = null;
+    }
+    if (foundVideoWrapGlobal)
+        foundVideoWrapGlobal.innerHTML = "";
+}
+export function stopScanCamera() {
+    if (scanMediaStreamGlobal) {
+        scanMediaStreamGlobal.getTracks().forEach((t) => t.stop());
+        scanMediaStreamGlobal = null;
+    }
+    if (scanVideoWrapGlobal)
+        scanVideoWrapGlobal.innerHTML = "";
+}
 function showFoundForm() {
     const ff = document.getElementById("found-form");
     if (ff)
@@ -70,7 +90,7 @@ export function bindScan() {
     const foundVideoWrap = document.getElementById("foundVideoWrap");
     const foundCamPanel = document.getElementById("foundCamPanel");
     const foundQuickActions = document.getElementById("foundQuickActions");
-    let foundMediaStream = null;
+    foundVideoWrapGlobal = foundVideoWrap;
     let foundCapturedDataUrl = null;
     function showFoundPhotoPreview(src) {
         if (!foundPreview)
@@ -86,7 +106,7 @@ export function bindScan() {
     }
     async function startFoundCamera() {
         try {
-            if (foundMediaStream)
+            if (foundMediaStreamGlobal)
                 return;
             const video = document.createElement("video");
             video.setAttribute("playsinline", "");
@@ -96,14 +116,14 @@ export function bindScan() {
                 foundVideoWrap.appendChild(video);
             }
             try {
-                foundMediaStream = await navigator.mediaDevices.getUserMedia({
+                foundMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: { ideal: "environment" } },
                 });
             }
             catch {
-                foundMediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                foundMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({ video: true });
             }
-            video.srcObject = foundMediaStream;
+            video.srcObject = foundMediaStreamGlobal;
             await video.play();
         }
         catch (e) {
@@ -111,15 +131,6 @@ export function bindScan() {
             showToast("Unable to access camera. Please allow permission or use file upload.", "error");
         }
     }
-    function stopFoundCamera() {
-        if (foundMediaStream) {
-            foundMediaStream.getTracks().forEach((t) => t.stop());
-            foundMediaStream = null;
-        }
-        if (foundVideoWrap)
-            foundVideoWrap.innerHTML = "";
-    }
-    window.stopFoundCamera = stopFoundCamera;
     function toggleFoundCamPanel(show) {
         if (!foundCamPanel)
             return;
@@ -154,7 +165,7 @@ export function bindScan() {
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
-                foundCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+                foundCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.5);
                 showFoundPhotoPreview(foundCapturedDataUrl);
                 toggleFoundCamPanel(false);
             }
@@ -172,7 +183,7 @@ export function bindScan() {
                 return;
             }
             try {
-                const dataUrl = await fileToDataUrl(f, 800);
+                const dataUrl = await fileToDataUrl(f, 640);
                 showFoundPhotoPreview(dataUrl);
             }
             catch (err) {
@@ -197,6 +208,7 @@ export function bindScan() {
     let scanRaf = null;
     let scanVideoEl = null;
     async function startCameraScan() {
+        scanVideoWrapGlobal = videoWrap;
         try {
             const video = document.createElement("video");
             video.setAttribute("playsinline", "");
@@ -206,14 +218,14 @@ export function bindScan() {
                 videoWrap.appendChild(video);
             }
             try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({
+                scanMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: { ideal: "environment" } },
                 });
             }
             catch {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                scanMediaStreamGlobal = await navigator.mediaDevices.getUserMedia({ video: true });
             }
-            video.srcObject = mediaStream;
+            video.srcObject = scanMediaStreamGlobal;
             await video.play();
             scanVideoEl = video;
             scanning = true;
@@ -232,7 +244,7 @@ export function bindScan() {
             showToast("Camera access failed.", "error");
         }
     }
-    async function stopCamera() {
+    function stopCameraLocal() {
         scanning = false;
         if (scanRaf) {
             cancelAnimationFrame(scanRaf);
@@ -246,14 +258,8 @@ export function bindScan() {
             catch (e) { }
             scanVideoEl = null;
         }
-        if (mediaStream) {
-            mediaStream.getTracks().forEach((t) => t.stop());
-            mediaStream = null;
-        }
-        if (videoWrap)
-            videoWrap.innerHTML = "";
+        stopScanCamera();
     }
-    window.stopScanCamera = stopCamera;
     function startJsQRLoop(video, canvas, ctx, resultCard) {
         const tickFallback = () => {
             if (!scanning || !scanVideoEl)
@@ -270,7 +276,7 @@ export function bindScan() {
                         const code = jsQR(imageData.data, imageData.width, imageData.height);
                         if (code && code.data) {
                             scannedItemId = (code.data || "").trim();
-                            stopCamera();
+                            stopCameraLocal();
                             showFoundForm();
                             if (scannedItemId && resultCard)
                                 loadScannedItem(scannedItemId, resultCard);
@@ -330,7 +336,7 @@ export function bindScan() {
         img.src = url;
     }
     startBtn?.addEventListener("click", startCameraScan);
-    stopBtn?.addEventListener("click", stopCamera);
+    stopBtn?.addEventListener("click", stopCameraLocal);
     imgFile?.addEventListener("change", (e) => {
         const f = e.target.files?.[0];
         if (f)

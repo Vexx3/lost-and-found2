@@ -129,7 +129,18 @@ if (claimForm) {
             }
             // Automatically use the item's registered owner name as the claimant name if verified via email
             const claimantName = item.ownerName || "Owner (Verified by Email)";
-            const r = await api.request('/claims', 'POST', { itemId: claimingItemId, claimantName });
+            // Simulate creating a claim directly
+            const db = await api.getDb();
+            const newClaim = {
+                id: "claim-" + Date.now(),
+                itemId: claimingItemId,
+                claimantName,
+                createdAt: Date.now()
+            };
+            db.claims = db.claims || [];
+            db.claims.push(newClaim);
+            await api.updateDb(db);
+            const r = { success: true, message: "Claim submitted" };
             if (!r)
                 throw new Error("Claim failed");
             showToast("Claim successful! Please proceed to the office for final verification.", "success");

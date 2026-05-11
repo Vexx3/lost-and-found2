@@ -1,9 +1,9 @@
 import { api } from "./api.js";
 import { showToast } from "./modules/ui.js";
-import { bindRegister } from "./modules/registration.js";
+import { bindRegister, stopRegCamera } from "./modules/registration.js";
 import { bindMyItems } from "./modules/myitems.js";
 import { loadLostItems } from "./modules/lost.js";
-import { bindScan } from "./modules/scanner.js";
+import { bindScan, stopFoundCamera, stopScanCamera } from "./modules/scanner.js";
 function setActivePanel() {
     const hash = window.location.hash || "#home";
     document
@@ -11,12 +11,9 @@ function setActivePanel() {
         .forEach((el) => el.classList.remove("active"));
     // Stop any active cameras when navigating away
     try {
-        if (window.stopRegCamera)
-            window.stopRegCamera();
-        if (window.stopScanCamera)
-            window.stopScanCamera();
-        if (window.stopFoundCamera)
-            window.stopFoundCamera();
+        stopRegCamera();
+        stopScanCamera();
+        stopFoundCamera();
     }
     catch (e) { }
     try {
