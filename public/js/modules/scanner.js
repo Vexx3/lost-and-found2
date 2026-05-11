@@ -373,7 +373,7 @@ export function bindScan() {
                 });
                 if (!r)
                     throw new Error("Submit failed");
-                showToast("Report submitted. Thank you! Sender will be emailed.", "success");
+                showToast("Report submitted. Thank you! The admin will verify it shortly.", "success");
                 foundForm.reset();
                 hideFoundForm();
                 foundCapturedDataUrl = null;

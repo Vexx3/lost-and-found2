@@ -139,8 +139,17 @@ async function initAdmin() {
     loadAnalytics();
     loadRetentionPolicy();
     bindDataControls();
+    document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible" && sessionStorage.getItem("ifound_admin_auth") === "1") {
+            await ifoundDB.init();
+            loadPending();
+            loadClaims();
+            loadAnalytics();
+        }
+    });
 }
 async function loadPending() {
+    await ifoundDB.init();
     const container = document.getElementById("reports");
     if (!container)
         return;
