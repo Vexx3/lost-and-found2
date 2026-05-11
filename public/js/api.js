@@ -47,7 +47,8 @@ export const api = {
         const newReport = {
             ...reportData,
             id: generateId(),
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            status: "pending"
         };
         db.reports.push(newReport);
         await this.updateDb(db);
@@ -55,9 +56,9 @@ export const api = {
         const item = await this.getItem(reportData.itemId);
         if (item && item.email && typeof window.emailjs !== 'undefined') {
             try {
-                await window.emailjs.send("default_service", "template_found", {
+                await window.emailjs.send("service_ekzlw6i", "template_ile62wu", {
                     to_email: item.email,
-                    item_name: item.name,
+                    item_name: item.itemName || "Unknown Item",
                     faculty_notes: reportData.notes || ""
                 });
             }

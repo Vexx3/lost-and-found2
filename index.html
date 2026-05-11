@@ -20,7 +20,12 @@
   <header class="topbar">
     <div class="brand">ifound</div>
     <button class="hamburger" id="menuToggle" aria-label="Toggle menu">&#9776;</button>
+    <div class="nav-backdrop" id="navBackdrop"></div>
     <nav id="mainNav">
+      <div class="nav-header" style="display: none; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px;">
+        <span class="brand" style="font-size: 18px; font-weight: 700;">Navigation</span>
+        <button class="close-nav" id="menuClose" aria-label="Close menu">✕</button>
+      </div>
       <a href="#home">Home</a>
       <a href="#scan">Report Item</a>
       <a href="#register">Register</a>
@@ -73,8 +78,14 @@
       <div id="found-form" class="card" style="display:none;">
         <h3>Report Found Item</h3>
         <form id="foundForm">
-          <input type="text" id="finderName" placeholder="Your full name" required />
-          <input type="text" id="foundLocation" placeholder="Where did you find it? (e.g., Library, Room 301)" required />
+          <div class="form-group">
+            <label for="finderName">Your Full Name <span style="color:#ef4444">*</span></label>
+            <input type="text" id="finderName" placeholder="e.g., Jane Doe" required />
+          </div>
+          <div class="form-group">
+            <label for="foundLocation">Where did you find it? <span style="color:#ef4444">*</span></label>
+            <input type="text" id="foundLocation" placeholder="e.g., Library, Room 301" required />
+          </div>
 
           <label style="margin-top:8px;display:block;">Photo of Item <span style="color:#ef4444">*</span></label>
           <div id="foundPhotoWrap" style="margin-top:6px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
@@ -108,25 +119,45 @@
       <p>Fill in the details below to register your item and generate a QR tag.</p>
       <form id="registerForm" class="card">
         <div class="two-col">
-          <input id="fullName" placeholder="Full Name" required />
-          <input id="strand" placeholder="Strand" required />
+          <div class="form-group">
+            <label for="fullName">Full Name <span style="color:#ef4444">*</span></label>
+            <input id="fullName" placeholder="e.g., John Smith" required />
+          </div>
+          <div class="form-group">
+            <label for="strand">Strand/Course <span style="color:#ef4444">*</span></label>
+            <input id="strand" placeholder="e.g., BSIT, STEM" required />
+          </div>
         </div>
         <div class="two-col">
-          <input id="email" placeholder="Email" type="email" required />
-          <input id="contact" placeholder="Contact Number" required />
+          <div class="form-group">
+            <label for="email">Email <span style="color:#ef4444">*</span></label>
+            <input id="email" placeholder="e.g., john@gmail.com" type="email" required />
+          </div>
+          <div class="form-group">
+            <label for="contact">Contact Number <span style="color:#ef4444">*</span></label>
+            <input id="contact" placeholder="e.g., 09123456789" required />
+          </div>
         </div>
         <div class="two-col">
-          <input id="studentId" placeholder="Student ID" required />
-          <input id="itemName" placeholder="Item Name (e.g., Wallet)" required />
+          <div class="form-group">
+            <label for="studentId">Student ID <span style="color:#ef4444">*</span></label>
+            <input id="studentId" placeholder="e.g., 010101-1234" required />
+          </div>
+          <div class="form-group">
+            <label for="itemName">Item Name <span style="color:#ef4444">*</span></label>
+            <input id="itemName" placeholder="e.g., Black Wallet" required />
+          </div>
         </div>
-        <label>Category</label>
-        <select id="itemCategory" required>
-          <option value="">Select Category</option>
-          <option value="phones">Phone</option>
-          <option value="wallets">Wallet</option>
-          <option value="tumblers">Tumbler</option>
-          <option value="other">Other</option>
-        </select>
+        <div class="form-group">
+          <label for="itemCategory">Category <span style="color:#ef4444">*</span></label>
+          <select id="itemCategory" required>
+            <option value="">Select Category</option>
+            <option value="phones">Phone</option>
+            <option value="wallets">Wallet</option>
+            <option value="tumblers">Tumbler</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
         <label>Item Picture <span style="color:#ef4444">*</span></label>
         <input id="itemPhoto" type="file" accept="image/*" capture="environment" />
         <div id="regPreviewWrap" style="

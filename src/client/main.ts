@@ -60,7 +60,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const toggle = document.getElementById("menuToggle");
   const nav = document.getElementById("mainNav");
-  if (toggle && nav) {
-    toggle.addEventListener("click", () => nav.classList.toggle("open"));
+  const backdrop = document.getElementById("navBackdrop");
+  const closeBtn = document.getElementById("menuClose");
+
+  function closeMenu() {
+    nav?.classList.remove("open");
+    backdrop?.classList.remove("open");
   }
+
+  if (toggle && nav) {
+    toggle.addEventListener("click", () => {
+      nav.classList.add("open");
+      backdrop?.classList.add("open");
+    });
+  }
+
+  closeBtn?.addEventListener("click", closeMenu);
+  backdrop?.addEventListener("click", closeMenu);
+
+  document.querySelectorAll("#mainNav a").forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
 });
