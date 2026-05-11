@@ -18,7 +18,7 @@ const ifoundDB = {
       return { ...r, itemName: item.itemName, itemPhoto: item.photoPath || item.photoDataUrl };
     });
   },
-  async verifyReportMoveToLost(reportId: any) {
+  async verifyReportMoveToLost(reportId: any, facultyNotes: string = "") {
     const report = this.db.found_reports.find((r: any) => r.id === reportId);
     if (!report) return false;
     const item = this.db.items.find((i: any) => i.id === report.itemId);
@@ -30,9 +30,9 @@ const ifoundDB = {
     report.status = "verified";
     await this.save();
     try {
-      // Removed backend notify call, emails send via EmailJS in addFoundReport automatically for frontend
-      // Or we can manually trigger emailjs here if preferred.
-      console.log("Verified found report. Emails send via frontend JS now.");
+      if (item && item.email) {
+         api.notifyVerified(item.email, item.itemName || "Unknown Item", facultyNotes);
+      }
     } catch (e) {
       console.error("Failed to notify verified:", e);
     }
@@ -181,17 +181,18 @@ async function loadPending() {
             type: "button",
             class: "btn primary",
             onclick: async (ev: any) => {
-              if (!confirm("Verify and move to Lost Items?")) return;
+              const notes = prompt("Any notes for the student? (e.g. 'Pick it up at Room 301 before 5PM'). Leave blank for no notes.");
+              if (notes === null) return; // User cancelled
               const btn = ev.currentTarget;
               btn.disabled = true;
               btn.textContent = "Verifying...";
               try {
-                const ok = await ifoundDB.verifyReportMoveToLost(report.id);
+                const ok = await ifoundDB.verifyReportMoveToLost(report.id, notes);
                 if (ok) {
                   card.innerHTML = "";
-                  card.appendChild(h("div", { class: "status-claimed" }, "Moved to Lost Items"));
+                  card.appendChild(h("div", { class: "status-claimed" }, "Moved to Lost Items & Email Sent"));
                   loadAnalytics();
-                  showToast("Verified and moved to Lost Items.", "success");
+                  showToast("Verified, moved to Lost Items, and emailed student.", "success");
                 }
               } catch (e) {
                 showToast("Error during verification.", "error");

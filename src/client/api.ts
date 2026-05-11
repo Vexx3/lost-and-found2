@@ -10,7 +10,7 @@ function generateId(): string {
 export const api = {
   async getDb(): Promise<any> {
     const data = localStorage.getItem(DB_KEY);
-    return data ? JSON.parse(data) : { items: [], reports: [] };
+    return data ? JSON.parse(data) : { items: [], found_reports: [], claims: [] };
   },
 
   async updateDb(db: any): Promise<any> {
@@ -58,22 +58,9 @@ export const api = {
       createdAt: Date.now(),
       status: "pending"
     };
-    db.reports.push(newReport);
+    db.found_reports = db.found_reports || [];
+    db.found_reports.push(newReport);
     await this.updateDb(db);
-    
-    // Attempt EmailJS notification if EmailJS is available globally
-    const item = await this.getItem(reportData.itemId);
-    if (item && item.email && typeof (window as any).emailjs !== 'undefined') {
-      try {
-        await (window as any).emailjs.send("service_ekzlw6i", "template_ile62wu", {
-          to_email: item.email,
-          item_name: item.itemName || "Unknown Item",
-          faculty_notes: reportData.notes || ""
-        });
-      } catch (err) {
-        console.error("EmailJS sending failed:", err);
-      }
-    }
 
     return newReport;
   },
