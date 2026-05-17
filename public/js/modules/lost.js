@@ -12,7 +12,7 @@ export async function loadLostItems() {
         const search = searchInput ? searchInput.value.trim().toLowerCase() : "";
         const catSelect = document.getElementById("categoryFilter");
         const cat = catSelect ? (catSelect.value || "all").toLowerCase() : "all";
-        items
+        const filtered = items
             .filter((item) => {
             const hit = (item.itemName || "")
                 .toLowerCase()
@@ -20,8 +20,12 @@ export async function loadLostItems() {
             const itemCat = item.category || inferCategoryFromName(item.itemName);
             const inCat = cat === "all" || itemCat === cat;
             return hit && inCat;
-        })
-            .forEach((item) => {
+        });
+        if (filtered.length === 0) {
+            list.appendChild(h("div", { style: "color:#6b7280;text-align:center;padding:24px" }, "No lost items match your search. Keep checking back."));
+            return;
+        }
+        filtered.forEach((item) => {
             const ownerPhoto = item.photoPath || item.photoDataUrl;
             const foundPic = item.foundPhotoPath || item.foundPhotoDataUrl;
             const primaryPhoto = foundPic || ownerPhoto;
@@ -56,9 +60,6 @@ export async function loadLostItems() {
             ]);
             list.appendChild(card);
         });
-        if (items.length === 0) {
-            list.appendChild(h("div", { style: "color:#6b7280;text-align:center;padding:24px" }, "No lost items match your search. Keep checking back."));
-        }
     }
     catch (err) {
         console.error(err);
@@ -88,7 +89,9 @@ async function openClaimForm(itemId) {
             claimItemNameEl.textContent = item.itemName;
         if (claimForm instanceof HTMLFormElement)
             claimForm.reset();
-        document.getElementById("claimEmail").value = "";
+        const claimEmail = document.getElementById("claimEmail");
+        if (claimEmail)
+            claimEmail.value = "";
         if (claimModal) {
             claimModal.style.display = "flex";
             requestAnimationFrame(() => claimModal.classList.add("show"));
@@ -119,37 +122,70 @@ if (claimForm) {
         e.preventDefault();
         if (!claimingItemId)
             return;
+        const submitBtn = claimForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+        }
         try {
-            const email = document.getElementById("claimEmail").value.trim().toLowerCase();
-            const item = await api.getItem(claimingItemId);
-            if (!item)
-                return showToast("Item not found.", "error");
-            if ((item.email || "").trim().toLowerCase() !== email) {
-                return showToast("Email does not match the registered owner. Cannot claim.", "error");
+            const claimEmailInput = document.getElementById("claimEmail");
+            const email = claimEmailInput ? claimEmailInput.value.trim().toLowerCase() : "";
+            if (!email) {
+                showToast("Please enter your email address.", "error");
+                return;
             }
-            // Automatically use the item's registered owner name as the claimant name if verified via email
+            const item = await api.getItem(claimingItemId);
+            if (!item) {
+                showToast("Item not found.", "error");
+                return;
+            }
+            if ((item.email || "").trim().toLowerCase() !== email) {
+                showToast("Email does not match the registered owner. Cannot claim.", "error");
+                return;
+            }
+            // Use the item's registered owner name as the claimant name (verified via email)
             const claimantName = item.ownerName || "Owner (Verified by Email)";
-            // Simulate creating a claim directly
+            // Create a claim record
             const db = await api.getDb();
             const newClaim = {
                 id: "claim-" + Date.now(),
                 itemId: claimingItemId,
                 claimantName,
+                studentId: item.studentId,
+                email: item.email,
+                status: "pending_pickup",
                 createdAt: Date.now()
             };
             db.claims = db.claims || [];
             db.claims.push(newClaim);
+            // ✅ FIX: Update item status to "claimed" so it's removed from Lost Items
+            db.items = db.items.map((i) => {
+                if (i.id === claimingItemId) {
+                    return { ...i, status: "claimed", claimedAt: new Date().toISOString() };
+                }
+                return i;
+            });
             await api.updateDb(db);
-            const r = { success: true, message: "Claim submitted" };
-            if (!r)
-                throw new Error("Claim failed");
-            showToast("Claim successful! Please proceed to the office for final verification.", "success");
+            // Send email notification to the owner about claim success
+            try {
+                await api.notifyClaimed(item.email, item.itemName, item.ownerName);
+            }
+            catch (emailErr) {
+                console.error("Failed to send claim email:", emailErr);
+            }
+            showToast("Claim successful! Please proceed to the Lost & Found office to pick up your item.", "success");
             closeClaimModal();
             loadLostItems();
         }
         catch (err) {
             console.error(err);
             showToast("Failed to submit claim.", "error");
+        }
+        finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Claim";
+            }
         }
     });
 }

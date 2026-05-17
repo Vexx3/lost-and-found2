@@ -81,20 +81,47 @@ export const api = {
     return updatedItem;
   },
   
+  /**
+   * Send email notification when a found report is verified and item moved to Lost Items
+   */
   async notifyVerified(email: string, itemName: string, notes: string): Promise<boolean> {
     if (typeof (window as any).emailjs !== 'undefined') {
       try {
-        await (window as any).emailjs.send("default_service", "template_found", {
+        await (window as any).emailjs.send("default_service", "ifound-report", {
           to_email: email,
           item_name: itemName,
-          faculty_notes: notes || ""
+          faculty_notes: notes || "No additional notes."
         });
+        console.log("Verification email sent to:", email);
         return true;
       } catch (err) {
-        console.error("EmailJS sending failed:", err);
+        console.error("EmailJS verification email failed:", err);
         return false;
       }
     }
+    console.warn("EmailJS not loaded, email notification skipped.");
+    return false;
+  },
+
+  /**
+   * Send email notification when an item is successfully claimed
+   */
+  async notifyClaimed(email: string, itemName: string, ownerName: string): Promise<boolean> {
+    if (typeof (window as any).emailjs !== 'undefined') {
+      try {
+        await (window as any).emailjs.send("default_service", "ifound-claimed", {
+          to_email: email,
+          item_name: itemName,
+          owner_name: ownerName || "Student"
+        });
+        console.log("Claim confirmation email sent to:", email);
+        return true;
+      } catch (err) {
+        console.error("EmailJS claim email failed:", err);
+        return false;
+      }
+    }
+    console.warn("EmailJS not loaded, claim email notification skipped.");
     return false;
   }
 };

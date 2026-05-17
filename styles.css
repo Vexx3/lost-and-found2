@@ -23,6 +23,7 @@ body {
   background: var(--bg);
   color: #0f172a;
   line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Form Groups explicitly requested in Phase 3 */
@@ -107,6 +108,7 @@ main {
   font-size: 14px;
   line-height: 1.2;
   transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:hover {
@@ -136,6 +138,12 @@ main {
   background: var(--yellow-hover);
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Card container */
 .card {
   background: var(--card);
@@ -158,6 +166,7 @@ select {
   border-radius: 8px;
   border: 1px solid #e6eef8;
   width: 100%;
+  font-size: 16px; /* Prevent iOS zoom on focus */
 }
 
 input[type="file"] {
@@ -167,6 +176,7 @@ input[type="file"] {
   border-radius: 8px;
   cursor: pointer;
   width: 100%;
+  font-size: 14px;
 }
 input[type="file"]:hover {
   border-color: var(--blue);
@@ -217,59 +227,6 @@ input[type="file"]:hover {
 
 .item .meta {
   margin-top: 8px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 700px) {
-  .two-col {
-    grid-template-columns: 1fr;
-  }
-
-  .video-wrap {
-    max-width: 100%;
-    aspect-ratio: 4 / 3;
-    height: auto;
-    background: #1e293b;
-  }
-
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .scan-wrap {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .scan-controls {
-    width: 100%;
-  }
-
-  .cta-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  main {
-    margin: 18px auto;
-    padding: 0 12px;
-  }
-
-  .btn {
-    font-size: 16px;
-    padding: 12px 16px;
-  }
-
-  input,
-  select {
-    font-size: 16px;
-  }
-
-  .list {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
 }
 
 .video-wrap {
@@ -343,9 +300,11 @@ input:focus, select:focus, .btn:focus-visible {
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
+  display: inline-block;
 }
 
-.status-claimed {
+.status-claimed,
+.status-returned {
   background: rgba(16, 185, 129, 0.12);
   color: #065f46;
   padding: 4px 10px;
@@ -353,6 +312,7 @@ input:focus, select:focus, .btn:focus-visible {
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
+  display: inline-block;
 }
 
 .status-lost {
@@ -363,6 +323,7 @@ input:focus, select:focus, .btn:focus-visible {
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
+  display: inline-block;
 }
 
 .status-archived {
@@ -373,6 +334,17 @@ input:focus, select:focus, .btn:focus-visible {
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
+  display: inline-block;
+}
+
+.status-pending_pickup {
+  background: rgba(124, 58, 237, 0.10);
+  color: #5b21b6;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
 }
 
 /* Input focus & transition */
@@ -541,6 +513,9 @@ footer {
   opacity: 1;
 }
 
+/* =====================================================
+   MOBILE RESPONSIVE 
+   ===================================================== */
 @media (max-width: 700px) {
   .hamburger {
     display: block;
@@ -553,6 +528,7 @@ footer {
     right: -280px;
     width: 260px;
     height: 100vh;
+    height: 100dvh;
     background: var(--blue);
     flex-direction: column;
     padding: 0;
@@ -561,6 +537,8 @@ footer {
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: -4px 0 16px rgba(0,0,0,0.15);
     display: flex; /* always flex to allow layout, controlled by right pos */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .topbar nav.open {
@@ -576,5 +554,167 @@ footer {
     padding: 12px 16px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 8px;
+  }
+
+  /* Form responsive */
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .video-wrap {
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
+    height: auto;
+    background: #1e293b;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scan-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scan-controls {
+    width: 100%;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  main {
+    margin: 18px auto;
+    padding: 0 12px;
+  }
+
+  .panel {
+    padding: 14px 4px;
+  }
+
+  .btn {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  input,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+  }
+
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Registration page mobile fixes */
+  #regPreviewWrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  #regPreviewWrap img#regPreview {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto;
+  }
+
+  #regCamPanel {
+    width: 100%;
+  }
+
+  #regCamPanel .video-wrap {
+    max-width: 100%;
+  }
+
+  #regQuickActions {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  #regQuickActions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* Found form photo section mobile */
+  #foundPhotoWrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  #foundPhotoWrap img#foundPreview {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto;
+  }
+
+  #foundCamPanel {
+    width: 100%;
+  }
+
+  #foundQuickActions {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  #foundQuickActions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* Claim modal mobile */
+  .modal-card {
+    width: 95%;
+    padding: 20px 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* My Items page mobile */
+  #myItemsList .card {
+    overflow-x: hidden;
+  }
+
+  #myItemsList .card img {
+    max-width: 100% !important;
+  }
+
+  /* Toast on mobile */
+  .toast-notification {
+    bottom: 16px;
+    padding: 10px 18px;
+    font-size: 13px;
+    max-width: 92vw;
+  }
+}
+
+/* Small phones (< 400px) */
+@media (max-width: 400px) {
+  .panel {
+    padding: 10px 2px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  .btn {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+
+  #regQuickActions {
+    flex-direction: column !important;
+  }
+
+  #foundQuickActions {
+    flex-direction: column !important;
   }
 }
