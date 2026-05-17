@@ -3,7 +3,6 @@ import { api } from "../api.js";
 import { fileToDataUrl, assetUrl, maskName } from "./utils.js";
 let scannedItemId = null;
 let scanning = false;
-let mediaStream = null;
 let foundMediaStreamGlobal = null;
 let foundVideoWrapGlobal = null;
 let scanMediaStreamGlobal = null;
@@ -77,7 +76,7 @@ async function loadScannedItem(itemId, container) {
 export function bindScan() {
     const startBtn = document.getElementById("start-camera");
     const stopBtn = document.getElementById("stop-camera");
-    const videoWrap = document.querySelector(".video-wrap");
+    const videoWrap = document.getElementById("scanVideoWrap");
     const resultCard = document.getElementById("scan-result");
     const foundForm = document.getElementById("foundForm");
     const imgFile = document.getElementById("img-file");
