@@ -125,10 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function initAdmin() {
   await ifoundDB.init();
-  try {
-    const n = await ifoundDB.archiveExpiredItems(365);
-    if (n > 0) console.info(`[ifound] Auto-archived ${n} stale item(s).`);
-  } catch (e) {}
 
   loadPending();
   loadClaims();
