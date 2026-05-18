@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import { fileToDataUrl, assetUrl, maskName } from "./utils.js";
 let scannedItemId = null;
 let scanning = false;
+let mediaStream = null;
 let foundMediaStreamGlobal = null;
 let foundVideoWrapGlobal = null;
 let scanMediaStreamGlobal = null;
@@ -32,6 +33,14 @@ function hideFoundForm() {
     const ff = document.getElementById("found-form");
     if (ff)
         ff.style.display = "none";
+}
+export async function handleExternalScan(itemId) {
+    scannedItemId = itemId;
+    showFoundForm();
+    const resultCard = document.getElementById("scan-result");
+    if (resultCard) {
+        await loadScannedItem(itemId, resultCard);
+    }
 }
 async function loadScannedItem(itemId, container) {
     try {
@@ -76,7 +85,7 @@ async function loadScannedItem(itemId, container) {
 export function bindScan() {
     const startBtn = document.getElementById("start-camera");
     const stopBtn = document.getElementById("stop-camera");
-    const videoWrap = document.getElementById("scanVideoWrap");
+    const videoWrap = document.querySelector(".video-wrap");
     const resultCard = document.getElementById("scan-result");
     const foundForm = document.getElementById("foundForm");
     const imgFile = document.getElementById("img-file");
@@ -274,7 +283,15 @@ export function bindScan() {
                         const imageData = ctx.getImageData(0, 0, w, hh);
                         const code = jsQR(imageData.data, imageData.width, imageData.height);
                         if (code && code.data) {
-                            scannedItemId = (code.data || "").trim();
+                            let data = (code.data || "").trim();
+                            if (data.includes("?scan=")) {
+                                try {
+                                    const url = new URL(data);
+                                    data = url.searchParams.get("scan") || data;
+                                }
+                                catch (e) { }
+                            }
+                            scannedItemId = data;
                             stopCameraLocal();
                             showFoundForm();
                             if (scannedItemId && resultCard)
@@ -314,7 +331,15 @@ export function bindScan() {
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         const code = jsQR(imageData.data, imageData.width, imageData.height);
                         if (code && code.data) {
-                            scannedItemId = (code.data || "").trim();
+                            let data = (code.data || "").trim();
+                            if (data.includes("?scan=")) {
+                                try {
+                                    const url = new URL(data);
+                                    data = url.searchParams.get("scan") || data;
+                                }
+                                catch (e) { }
+                            }
+                            scannedItemId = data;
                             showFoundForm();
                             if (scannedItemId && resultCard)
                                 loadScannedItem(scannedItemId, resultCard);

@@ -3,7 +3,7 @@ import { showToast } from "./modules/ui.js";
 import { bindRegister, stopRegCamera } from "./modules/registration.js";
 import { bindMyItems } from "./modules/myitems.js";
 import { loadLostItems } from "./modules/lost.js";
-import { bindScan, stopFoundCamera, stopScanCamera } from "./modules/scanner.js";
+import { bindScan, stopFoundCamera, stopScanCamera, handleExternalScan } from "./modules/scanner.js";
 function setActivePanel() {
     const hash = window.location.hash || "#home";
     document
@@ -54,6 +54,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     catch (e) {
         showToast("Backend connection failed. Is the server running?", "error");
+    }
+    const params = new URLSearchParams(window.location.search);
+    const scanId = params.get("scan");
+    if (scanId) {
+        window.location.hash = "#scan";
+        setActivePanel();
+        setTimeout(() => {
+            handleExternalScan(scanId);
+        }, 300);
     }
     const toggle = document.getElementById("menuToggle");
     const nav = document.getElementById("mainNav");

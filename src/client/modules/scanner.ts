@@ -42,6 +42,15 @@ function hideFoundForm() {
   if (ff) ff.style.display = "none";
 }
 
+export async function handleExternalScan(itemId: string) {
+    scannedItemId = itemId;
+    showFoundForm();
+    const resultCard = document.getElementById("scan-result");
+    if (resultCard) {
+        await loadScannedItem(itemId, resultCard);
+    }
+}
+
 async function loadScannedItem(itemId: string, container: HTMLElement) {
   try {
     const item = await api.getItem(itemId);
@@ -287,11 +296,18 @@ export function bindScan() {
             const imageData = ctx.getImageData(0, 0, w, hh);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code && code.data) {
-              scannedItemId = (code.data || "").trim();
-              stopCameraLocal();
-              showFoundForm();
-              if (scannedItemId && resultCard) loadScannedItem(scannedItemId, resultCard);
-              return;
+                let data = (code.data || "").trim();
+                if (data.includes("?scan=")) {
+                    try {
+                        const url = new URL(data);
+                        data = url.searchParams.get("scan") || data;
+                    } catch (e) {}
+                }
+                scannedItemId = data;
+                stopCameraLocal();
+                showFoundForm();
+                if (scannedItemId && resultCard) loadScannedItem(scannedItemId, resultCard);
+                return;
             }
           } catch (err) { }
         }
@@ -325,7 +341,14 @@ export function bindScan() {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code && code.data) {
-              scannedItemId = (code.data || "").trim();
+              let data = (code.data || "").trim();
+              if (data.includes("?scan=")) {
+                  try {
+                      const url = new URL(data);
+                      data = url.searchParams.get("scan") || data;
+                  } catch (e) {}
+              }
+              scannedItemId = data;
               showFoundForm();
               if (scannedItemId && resultCard) loadScannedItem(scannedItemId, resultCard);
             } else {

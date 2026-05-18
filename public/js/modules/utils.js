@@ -62,7 +62,8 @@ export function fileToDataUrl(file, maxWidth = 640) {
 }
 export async function downloadQr(itemId) {
     try {
-        const dataUrl = await generateQrDataUrl(String(itemId), 200);
+        const fullUrl = `${window.location.origin}${window.location.pathname}?scan=${itemId}#scan`;
+        const dataUrl = await generateQrDataUrl(fullUrl, 200);
         const res = await fetch(dataUrl);
         const blob = await res.blob();
         const obj = URL.createObjectURL(blob);

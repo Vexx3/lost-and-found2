@@ -67,7 +67,7 @@ export function bindMyItems() {
           ),
         ]);
         list.appendChild(card);
-        generateQrDataUrl(String(item.id), 200)
+        generateQrDataUrl(`${window.location.origin}${window.location.pathname}?scan=${item.id}#scan`, 200)
           .then((url: string) => {
             qrImg.setAttribute("src", url);
           })

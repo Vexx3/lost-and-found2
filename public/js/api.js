@@ -1,4 +1,12 @@
 const DB_KEY = 'lostAndFoundDb';
+// Set this to true and fill in your details to use Supabase
+const USE_SUPABASE = true;
+const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+let supabase = null;
+if (USE_SUPABASE && typeof window.supabase !== 'undefined' && SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 function generateId() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
         return crypto.randomUUID();
@@ -15,47 +23,95 @@ export const api = {
         return true;
     },
     async addItem(itemData) {
-        const db = await this.getDb();
         const newItem = {
             ...itemData,
             id: generateId(),
             createdAt: Date.now(),
             status: "registered"
         };
+        if (supabase) {
+            const { data, error } = await supabase.from('items').insert([newItem]).select().single();
+            if (error) {
+                console.error("Supabase insert error:", error);
+                throw error;
+            }
+            return data || newItem;
+        }
+        const db = await this.getDb();
         db.items.push(newItem);
         await this.updateDb(db);
         return newItem;
     },
     async getItem(id) {
+        if (supabase) {
+            const { data, error } = await supabase.from('items').select('*').eq('id', id).single();
+            if (error) {
+                if (error.code === 'PGRST116')
+                    return null; // Not found
+                throw error;
+            }
+            return data;
+        }
         const db = await this.getDb();
         return db.items.find((x) => x.id === id) || null;
     },
     async listItemsByStudent(studentId) {
+        if (supabase) {
+            const { data, error } = await supabase.from('items').select('*').eq('studentId', studentId).order('createdAt', { ascending: false });
+            if (error)
+                throw error;
+            return data || [];
+        }
         const db = await this.getDb();
         return db.items
             .filter((item) => item.studentId === studentId)
             .sort((a, b) => (b.createdAt - a.createdAt));
     },
     async listLostItems() {
+        if (supabase) {
+            const { data, error } = await supabase.from('items').select('*').eq('status', 'lost').order('createdAt', { ascending: false });
+            if (error)
+                throw error;
+            return data || [];
+        }
         const db = await this.getDb();
         return db.items
             .filter((item) => item.status === "lost")
             .sort((a, b) => (b.createdAt - a.createdAt));
     },
     async addFoundReport(reportData) {
-        const db = await this.getDb();
         const newReport = {
             ...reportData,
             id: generateId(),
             createdAt: Date.now(),
             status: "pending"
         };
+        if (supabase) {
+            const { data, error } = await supabase.from('found_reports').insert([newReport]).select().single();
+            if (error)
+                throw error;
+            return data || newReport;
+        }
+        const db = await this.getDb();
         db.found_reports = db.found_reports || [];
         db.found_reports.push(newReport);
         await this.updateDb(db);
         return newReport;
     },
     async updateItemStatus(id, newStatus) {
+        if (supabase) {
+            const updates = { status: newStatus };
+            if (newStatus === "claimed")
+                updates.claimedAt = new Date().toISOString();
+            else if (newStatus === "lost")
+                updates.lostSince = new Date().toISOString();
+            else if (newStatus === "returned")
+                updates.returnedAt = new Date().toISOString();
+            const { data, error } = await supabase.from('items').update(updates).eq('id', id).select().single();
+            if (error)
+                throw error;
+            return data;
+        }
         const db = await this.getDb();
         let updatedItem = null;
         db.items = db.items.map((item) => {

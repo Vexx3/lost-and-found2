@@ -64,7 +64,8 @@ export function fileToDataUrl(file: File, maxWidth: number = 640): Promise<strin
 
 export async function downloadQr(itemId: string) {
   try {
-    const dataUrl = await generateQrDataUrl(String(itemId), 200);
+    const fullUrl = `${window.location.origin}${window.location.pathname}?scan=${itemId}#scan`;
+    const dataUrl = await generateQrDataUrl(fullUrl, 200);
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const obj = URL.createObjectURL(blob);
