@@ -146,26 +146,14 @@ if (claimForm) {
             // Use the item's registered owner name as the claimant name (verified via email)
             const claimantName = item.ownerName || "Owner (Verified by Email)";
             // Create a claim record
-            const db = await api.getDb();
-            const newClaim = {
-                id: "claim-" + Date.now(),
+            await api.addClaim({
                 itemId: claimingItemId,
                 claimantName,
                 studentId: item.studentId,
                 email: item.email,
-                status: "pending_pickup",
-                createdAt: Date.now()
-            };
-            db.claims = db.claims || [];
-            db.claims.push(newClaim);
-            // ✅ FIX: Update item status to "claimed" so it's removed from Lost Items
-            db.items = db.items.map((i) => {
-                if (i.id === claimingItemId) {
-                    return { ...i, status: "claimed", claimedAt: new Date().toISOString() };
-                }
-                return i;
             });
-            await api.updateDb(db);
+            // ✅ FIX: Update item status to "claimed" so it's removed from Lost Items
+            await api.updateItemStatus(claimingItemId, "claimed");
             // Send email notification to the owner about claim success
             try {
                 await api.notifyClaimed(item.email, item.itemName, item.ownerName);

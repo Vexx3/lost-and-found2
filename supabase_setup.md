@@ -24,6 +24,7 @@ In your Supabase project, go to the **SQL Editor** and run the following command
 -- Create the items table
 CREATE TABLE items (
     id TEXT PRIMARY KEY,
+    "itemName" TEXT,
     "studentId" TEXT,
     "ownerName" TEXT,
     strand TEXT,
